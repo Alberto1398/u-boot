@@ -1,0 +1,10 @@
+obj-y += misc.o
+obj-y += mxml-attr.o
+obj-y += mxml-entity.o
+obj-y += mxml-file.o
+obj-y += mxml-index.o
+obj-y += mxml-node.o
+obj-y += mxml-private.o
+obj-y += mxml-search.o
+obj-y += mxml-set.o
+obj-y += mxml-string.o

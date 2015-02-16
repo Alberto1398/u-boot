@@ -1,0 +1,52 @@
+5202_v2
+    SRAM: [0xb4068000, 0xb407fc00)  (95KiB)
+    ADFUdec:
+        
+
+5202_v3
+    SRAM is the remapped of the VDE S-RAM
+    SRAM: [0xb4068000, 0xb407a000)  (72KiB)  (这里的SRAM复用VDE内部的SRAM)
+    BOOT:
+        MBRC1               [0xb4068000, 0xb4068200)  (512B)
+        <free>              [0xb4068200, 0xb4068400)  (512B)
+        BROM_storage_drv    [0xb4068400, 0xb4069c00)  (6KiB)
+        I2C_MBRC1(opt)      [0xb4069c00, 0xb406ac00)  (4KiB)
+        BREC_launcher       [0xb406ac00, 0xb406b800)  (3KiB)
+        I2C_drv             [0xb406b800, 0xb406c000)  (2KiB)            
+        <free>              [0xb406c000, 0xb4079000)  (52KiB)
+        stack               [0xb4079000, 0xb407a000)  (4KiB)
+        //
+        MBRC2               [0xb406c000, 0xb4070400)  (17KiB)
+            MBRC2_code      [0xb406c000, 0xb406fa00)  (14.5KiB)
+            MBRC2_startup   [0xb406fa00, 0xb406fc00)  (512B)
+            MBRC2_afi_r     [0xb406fc00, 0xb406fd00)  (256B)
+            MBRC2_slb_tbl   [0xb406fd00, 0xb4070400)  (1792B)
+    ADFU:
+        ADFU_launcher       [0xb4068000, 0xb406b200)  (12.5KiB)
+	unknown             [0xb406b200, 0xb406d000)  (7.5KiB)
+        <free>              [0xb406d000, 0xb4079000)  (48KiB)
+        stack               [0xb4079000, 0xb407a000)  (4KiB)
+        //
+        ADFUdec             [0xb406d000, ?)
+
+5207A
+    SRAM is the remapped of the DE S-RAM
+    SRAM: [0xb4068000, 0xb4070000)  (32KiB)  (这里的SRAM复用DE内部的SRAM)
+    BOOT:
+        MBRC1               [0xb4068000, 0xb4068200)  (512B)        I2C_boot_stub   [0xb4068000, 0xb4069000)  (4KiB)
+        <free>              [0xb4068200, 0xb4068400)  (512B)
+        BROM_storage_data   [0xb4068400, 0xb4068800)  (1KiB)
+        <free>              [0xb4068800, 0xb406f000)  (26KiB)
+        stack               [0xb406f000, 0xb4070000)  (4KiB)
+        //
+        MBRC2               [0xb4068800, 0xb406cc00)  (17KiB)
+            MBRC2_code      [0xb4068800, 0xb406c200)  (14.5KiB)
+            MBRC2_startup   [0xb406c200, 0xb406c400)  (512B)
+            MBRC2_afi_r     [0xb406c400, 0xb406c500)  (256B)
+            MBRC2_slb_tbl   [0xb406c500, 0xb406cc00)  (1792B)
+    ADFU:
+        ADFU_launcher_data  [0xb4068000, 0xb4068800)  (2KiB)
+        <free>              [0xb4068800, 0xb406f000)  (26KiB)
+        stack               [0xb406f000, 0xb4070000)  (4KiB)
+        //
+        ADFUdec             [0xb4068800, ?)

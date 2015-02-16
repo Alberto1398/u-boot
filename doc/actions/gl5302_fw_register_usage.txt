@@ -1,0 +1,20 @@
+PMU_UV_Status[1]                need to enter ADFU, set by kernel, clear by boot
+PMU_UV_INT_EN[1]                need to enter ADFU, set by boot, clear by boot   (seems not in used ????)
+
+PMU_UV_INT_EN[0]
+(the "low_power_boot_choice" switch)
+skip enter CHARGER, ie. do not append "androidboot.mode=charger" to kernel cmdline
+set by kernel, NOT clear by boot
+
+PMU_SYS_CTL2[2:1]               reset_status, 1:enter_recovery, clear by boot
+
+PMU_OC_Status[1]                
+skip enter CHARGER, ie. do not append "androidboot.mode=charger" to kernel cmdline
+set by kernel, clear by boot
+
+Get leopard_cpu_resume function phy address
+  PMU_SYS_CTL8 [15:0]--- resume_func_phy[15:0]
+  PMU_SYS_CTL9 bit[7:0]--- resume_func_phy[23:16] 
+  PMU_OC_Status bit [5:2] ---- resume_func_phy[31:28]
+  PMU_SYS_CTL3 bit [9:6]  ---- resume_func_phy[27:24]   
+
