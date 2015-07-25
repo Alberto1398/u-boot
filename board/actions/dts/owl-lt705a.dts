@@ -1,0 +1,10 @@
+/dts-v1/;
+
+/include/ ARCH_CPU_DTS
+
+/ {
+	model = "Actions LT705A board";
+	compatible = "actions,lt705a";
+	
+	/* owl dts location is owl/gs705a/config/board/atm70xx/dts/xxx.dts */
+};
