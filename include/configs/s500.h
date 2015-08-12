@@ -7,7 +7,7 @@
 #ifndef __CONFIG_S500_H
 #define __CONFIG_S500_H
 
-#define CONFIG_BOOTCOMMAND "run ramboot;"
+#define CONFIG_BOOTCOMMAND "run mmcboot;"
 
 #define CONFIG_EXTRA_ENV_SETTINGS			\
 	"stdin=serial\0"				\
@@ -15,7 +15,7 @@
 	"stderr=serial\0"				\
 	"splashpos=m,m\0"				\
 	"verify=yes\0"					\
-	"bootpart=1\0"					\
+	"bootpart=2\0"					\
 	"emmcdev=1\0"					\
 	"mmcdev=0\0"					\
 	"nanddev=0\0"					\
