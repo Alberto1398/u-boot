@@ -107,6 +107,9 @@ int mmc_select_hwpart(int dev_num, int hwpart);
 block_dev_desc_t* systemace_get_dev(int dev);
 block_dev_desc_t* mg_disk_get_dev(int dev);
 block_dev_desc_t *host_get_dev(int dev);
+#ifdef CONFIG_OWL_NAND
+block_dev_desc_t *owl_nand_get_dev(int dev);
+#endif
 int host_get_dev_err(int dev, block_dev_desc_t **blk_devp);
 
 /* disk/part.c */

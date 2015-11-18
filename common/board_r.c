@@ -59,6 +59,7 @@
 #ifdef CONFIG_AVR32
 #include <asm/arch/mmu.h>
 #endif
+#include <asm/arch/sys_proto.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -377,7 +378,7 @@ static int initr_spi(void)
 }
 #endif
 
-#ifdef CONFIG_CMD_NAND
+#if defined(CONFIG_CMD_NAND) || defined(CONFIG_OWL_NAND)
 /* go init the NAND */
 static int initr_nand(void)
 {
@@ -775,7 +776,7 @@ init_fnc_t init_sequence_r[] = {
 #ifdef CONFIG_PPC
 	initr_spi,
 #endif
-#ifdef CONFIG_CMD_NAND
+#if defined(CONFIG_CMD_NAND) || defined(CONFIG_OWL_NAND)
 	initr_nand,
 #endif
 #ifdef CONFIG_CMD_ONENAND
@@ -802,6 +803,9 @@ init_fnc_t init_sequence_r[] = {
 	 * Do pci configuration
 	 */
 	initr_pci,
+#endif
+#ifdef CONFIG_ANDROID_RECOVERY
+	check_recovery_mode,
 #endif
 	stdio_add_devices,
 	initr_jumptable,
