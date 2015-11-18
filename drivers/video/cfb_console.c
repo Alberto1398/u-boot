@@ -1205,8 +1205,8 @@ __weak void video_set_lut(unsigned int index, unsigned char r,
 }
 
 #define FILL_32BIT_X888RGB(r,g,b) {			\
-	*(unsigned long *)fb =				\
-		SWAP32((unsigned long)(((r<<16) |	\
+	*(unsigned int *)fb =				\
+		SWAP32((unsigned int)(((r<<16) |	\
 					(g<<8)  |	\
 					 b)));		\
 	fb += 4;					\
@@ -1954,8 +1954,8 @@ static void plot_logo_or_black(void *screen, int width, int x, int y, int black)
 							 (b >> 3)));
 				break;
 			case GDF_32BIT_X888RGB:
-				*(unsigned long *) dest =
-					SWAP32((unsigned long) (
+				*(unsigned int *) dest =
+					SWAP32((unsigned int) (
 							(r << 16) |
 							(g <<  8) |
 							 b));
