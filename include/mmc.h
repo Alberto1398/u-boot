@@ -65,11 +65,11 @@
 #define MMC_DATA_READ		1
 #define MMC_DATA_WRITE		2
 
-#define NO_CARD_ERR		-16 /* No SD/MMC card inserted */
-#define UNUSABLE_ERR		-17 /* Unusable Card */
-#define COMM_ERR		-18 /* Communications Error */
+#define NO_CARD_ERR		-16	/* No SD/MMC card inserted */
+#define UNUSABLE_ERR		-17	/* Unusable Card */
+#define COMM_ERR		-18	/* Communications Error */
 #define TIMEOUT			-19
-#define SWITCH_ERR		-20 /* Card reports failure to switch mode */
+#define SWITCH_ERR		-20	/* Card reports failure to switch mode */
 
 #define MMC_CMD_GO_IDLE_STATE		0
 #define MMC_CMD_SEND_OP_COND		1
@@ -99,7 +99,6 @@
 
 #define MMC_CMD62_ARG1			0xefac62ec
 #define MMC_CMD62_ARG2			0xcbaea7
-
 
 #define SD_CMD_SEND_RELATIVE_ADDR	3
 #define SD_CMD_SWITCH_FUNC		6
@@ -131,7 +130,7 @@
 
 #define MMC_STATE_PRG		(7 << 9)
 
-#define MMC_VDD_165_195		0x00000080	/* VDD voltage 1.65 - 1.95 */
+#define MMC_VDD_165_195	0x00000080	/* VDD voltage 1.65 - 1.95 */
 #define MMC_VDD_20_21		0x00000100	/* VDD voltage 2.0 ~ 2.1 */
 #define MMC_VDD_21_22		0x00000200	/* VDD voltage 2.1 ~ 2.2 */
 #define MMC_VDD_22_23		0x00000400	/* VDD voltage 2.2 ~ 2.3 */
@@ -149,14 +148,14 @@
 #define MMC_VDD_34_35		0x00400000	/* VDD voltage 3.4 ~ 3.5 */
 #define MMC_VDD_35_36		0x00800000	/* VDD voltage 3.5 ~ 3.6 */
 
-#define MMC_SWITCH_MODE_CMD_SET		0x00 /* Change the command set */
-#define MMC_SWITCH_MODE_SET_BITS	0x01 /* Set bits in EXT_CSD byte
-						addressed by index which are
-						1 in value field */
-#define MMC_SWITCH_MODE_CLEAR_BITS	0x02 /* Clear bits in EXT_CSD byte
-						addressed by index, which are
-						1 in value field */
-#define MMC_SWITCH_MODE_WRITE_BYTE	0x03 /* Set target byte to value */
+#define MMC_SWITCH_MODE_CMD_SET		0x00	/* Change the command set */
+#define MMC_SWITCH_MODE_SET_BITS	0x01	/* Set bits in EXT_CSD byte
+						   addressed by index which are
+						   1 in value field */
+#define MMC_SWITCH_MODE_CLEAR_BITS	0x02	/* Clear bits in EXT_CSD byte
+						   addressed by index, which are
+						   1 in value field */
+#define MMC_SWITCH_MODE_WRITE_BYTE	0x03	/* Set target byte to value */
 
 #define SD_SWITCH_CHECK		0
 #define SD_SWITCH_SWITCH	1
@@ -235,10 +234,10 @@
 #define R1_APP_CMD			(1 << 5)
 
 #define MMC_RSP_PRESENT (1 << 0)
-#define MMC_RSP_136	(1 << 1)		/* 136 bit response */
-#define MMC_RSP_CRC	(1 << 2)		/* expect valid crc */
-#define MMC_RSP_BUSY	(1 << 3)		/* card may send busy */
-#define MMC_RSP_OPCODE	(1 << 4)		/* response contains opcode */
+#define MMC_RSP_136	(1 << 1)	/* 136 bit response */
+#define MMC_RSP_CRC	(1 << 2)	/* expect valid crc */
+#define MMC_RSP_BUSY	(1 << 3)	/* card may send busy */
+#define MMC_RSP_OPCODE	(1 << 4)	/* response contains opcode */
 
 #define MMC_RSP_NONE	(0)
 #define MMC_RSP_R1	(MMC_RSP_PRESENT|MMC_RSP_CRC|MMC_RSP_OPCODE)
@@ -264,8 +263,21 @@
  * boot partitions (2), general purpose partitions (4) in MMC v4.4.
  */
 #define MMC_NUM_BOOT_PARTITION	2
-#define MMC_PART_RPMB           3       /* RPMB partition number */
+#define MMC_PART_RPMB           3	/* RPMB partition number */
 
+#define READ 	0
+#define WRITE 	1
+#define DAID0_CHUCK_SIZE  	4096
+#define DAID0_CHUCK_SECORT  (DAID0_CHUCK_SIZE/512)
+typedef struct {
+	unsigned long start_sec;
+	unsigned long sec_offset;
+	unsigned long sec_num; //512
+	bool tras_flag;
+	unsigned int  table[512];
+	unsigned int vailnum;
+	char* buf;
+}TRANS_PAR,*pTRANS_PAR;
 struct mmc_cid {
 	unsigned long psn;
 	unsigned short oid;
@@ -285,7 +297,7 @@ struct mmc_cmd {
 struct mmc_data {
 	union {
 		char *dest;
-		const char *src; /* src buffers don't get written to */
+		const char *src;	/* src buffers don't get written to */
 	};
 	uint flags;
 	uint blocks;
@@ -296,16 +308,16 @@ struct mmc_data {
 struct mmc;
 
 struct mmc_ops {
-	int (*send_cmd)(struct mmc *mmc,
-			struct mmc_cmd *cmd, struct mmc_data *data);
-	void (*set_ios)(struct mmc *mmc);
-	int (*init)(struct mmc *mmc);
-	int (*getcd)(struct mmc *mmc);
-	int (*getwp)(struct mmc *mmc);
+	int (*send_cmd) (struct mmc *mmc,
+			 struct mmc_cmd *cmd, struct mmc_data *data);
+	void (*set_ios) (struct mmc *mmc);
+	int (*init) (struct mmc *mmc);
+	int (*getcd) (struct mmc *mmc);
+	int (*getwp) (struct mmc *mmc);
 };
 
 struct mmc_config {
-	const char *name;
+	char *name;
 	const struct mmc_ops *ops;
 	uint host_caps;
 	uint voltages;
@@ -316,11 +328,17 @@ struct mmc_config {
 };
 
 /* TODO struct mmc should be in mmc_private but it's hard to fix right now */
+struct vir_mmc{
+	struct mmc *phy_mmca;
+	struct mmc *phy_mmcb;
+	unsigned char dual_mmc_en;
+};
 struct mmc {
 	struct list_head link;
 	const struct mmc_config *cfg;	/* provided configuration */
 	uint version;
 	void *priv;
+	void *vir;
 	uint has_init;
 	int high_capacity;
 	uint bus_width;
@@ -355,20 +373,21 @@ struct mmc {
 	char init_in_progress;	/* 1 if we have done mmc_start_init() */
 	char preinit;		/* start init as early as possible */
 	int ddr_mode;
+	TRANS_PAR card_trs_par;
 };
 
 struct mmc_hwpart_conf {
 	struct {
 		uint enh_start;	/* in 512-byte sectors */
 		uint enh_size;	/* in 512-byte sectors, if 0 no enh area */
-		unsigned wr_rel_change : 1;
-		unsigned wr_rel_set : 1;
+		unsigned wr_rel_change:1;
+		unsigned wr_rel_set:1;
 	} user;
 	struct {
 		uint size;	/* in 512-byte sectors */
-		unsigned enhanced : 1;
-		unsigned wr_rel_change : 1;
-		unsigned wr_rel_set : 1;
+		unsigned enhanced:1;
+		unsigned wr_rel_change:1;
+		unsigned wr_rel_set:1;
 	} gp_part[4];
 };
 
@@ -378,6 +397,11 @@ enum mmc_hwpart_conf_mode {
 	MMC_HWPART_CONF_COMPLETE,
 };
 
+struct mmc *mmc_vir_create(const struct mmc_config *cfg,
+								struct vir_mmc* vir_mmc);
+ulong vir_mmc_prepare_sector(struct mmc *mmc,lbaint_t start,
+							lbaint_t blkcnt);
+ulong mmc_bread(int dev_num, lbaint_t start, lbaint_t blkcnt, void *dst);
 int mmc_register(struct mmc *mmc);
 struct mmc *mmc_create(const struct mmc_config *cfg, void *priv);
 void mmc_destroy(struct mmc *mmc);
@@ -399,7 +423,7 @@ int board_mmc_getwp(struct mmc *mmc);
 int mmc_set_dsr(struct mmc *mmc, u16 val);
 /* Function to change the size of boot partition and rpmb partitions */
 int mmc_boot_partition_size_change(struct mmc *mmc, unsigned long bootsize,
-					unsigned long rpmbsize);
+				   unsigned long rpmbsize);
 /* Function to modify the PARTITION_CONFIG field of EXT_CSD */
 int mmc_set_part_conf(struct mmc *mmc, u8 ack, u8 part_num, u8 access);
 /* Function to modify the BOOT_BUS_WIDTH field of EXT_CSD */
@@ -453,7 +477,7 @@ void board_mmc_power_init(void);
 int board_mmc_init(bd_t *bis);
 int cpu_mmc_init(bd_t *bis);
 int mmc_get_env_addr(struct mmc *mmc, int copy, u32 *env_addr);
-
+void mmc_set_vir_cap(struct mmc *mmc);
 struct pci_device_id;
 
 /**
@@ -469,8 +493,9 @@ int pci_mmc_init(const char *name, struct pci_device_id *mmc_supported,
 		 int num_ids);
 
 /* Set block count limit because of 16 bit register limit on some hardware*/
-#ifndef CONFIG_SYS_MMC_MAX_BLK_COUNT
-#define CONFIG_SYS_MMC_MAX_BLK_COUNT 65535
+#ifdef CONFIG_SYS_MMC_MAX_BLK_COUNT
+#undef CONFIG_SYS_MMC_MAX_BLK_COUNT
 #endif
 
+#define CONFIG_SYS_MMC_MAX_BLK_COUNT  (1024*1024/512)
 #endif /* _MMC_H_ */

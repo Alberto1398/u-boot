@@ -14,6 +14,10 @@
 #include <linux/math64.h>
 #include "mmc_private.h"
 
+static ulong vir_split_write(struct mmc *mmc,lbaint_t start,
+								lbaint_t blkcnt,void *src);
+static ulong phy_mmc_bwrite( struct mmc *mmc,lbaint_t start,
+							lbaint_t blkcnt, const void *src);
 static ulong mmc_erase_t(struct mmc *mmc, ulong start, lbaint_t blkcnt)
 {
 	struct mmc_cmd cmd;
@@ -108,13 +112,13 @@ unsigned long mmc_berase(int dev_num, lbaint_t start, lbaint_t blkcnt)
 	return blk;
 }
 
+
 static ulong mmc_write_blocks(struct mmc *mmc, lbaint_t start,
 		lbaint_t blkcnt, const void *src)
 {
 	struct mmc_cmd cmd;
 	struct mmc_data data;
 	int timeout = 1000;
-
 	if ((start + blkcnt) > mmc->block_dev.lba) {
 		printf("MMC: block number 0x" LBAF " exceeds max(0x" LBAF ")\n",
 		       start + blkcnt, mmc->block_dev.lba);
@@ -165,13 +169,10 @@ static ulong mmc_write_blocks(struct mmc *mmc, lbaint_t start,
 	return blkcnt;
 }
 
-ulong mmc_bwrite(int dev_num, lbaint_t start, lbaint_t blkcnt, const void *src)
+
+static ulong phy_mmc_bwrite( struct mmc *mmc,lbaint_t start, lbaint_t blkcnt, const void *src)
 {
 	lbaint_t cur, blocks_todo = blkcnt;
-
-	struct mmc *mmc = find_mmc_device(dev_num);
-	if (!mmc)
-		return 0;
 
 	if (mmc_set_blocklen(mmc, mmc->write_bl_len))
 		return 0;
@@ -188,3 +189,118 @@ ulong mmc_bwrite(int dev_num, lbaint_t start, lbaint_t blkcnt, const void *src)
 
 	return blkcnt;
 }
+
+extern ulong vir_mmc_prepare_sector(struct mmc *mmc,lbaint_t start,
+								lbaint_t blkcnt);
+
+ulong mmc_bwrite(int dev_num, lbaint_t start, lbaint_t blkcnt, const void *src)
+{
+	lbaint_t realblkcnt = 0;
+	struct mmc *phymmc =NULL;
+	lbaint_t	blkcntbak = blkcnt;
+	struct mmc *mmc = find_mmc_device(dev_num);
+	if ((!mmc) ||(!src) ){
+		printf("%s: mmc :%lx  dst : %lx\n",__FUNCTION__,
+				(unsigned long)mmc,(unsigned long)src);
+		return -1;
+	}
+	struct vir_mmc *vir_mmc = (struct vir_mmc *)(mmc->priv);
+
+	if(vir_mmc->dual_mmc_en == 0){
+		/* singal channel process*/
+		phymmc = vir_mmc->phy_mmca;
+		if(phy_mmc_bwrite( phymmc, start,  blkcnt, src)!=blkcnt){
+			printf("err:%s:%d phy_mmc_bwrite \n",__FUNCTION__,__LINE__);
+			return -1;
+		}
+	}else{
+		while(1){
+
+				if(blkcnt == 0){
+				/*trasnfer finish ,resume blkcnt for return value*/
+					blkcnt = blkcntbak;
+					break;
+				}else if(blkcnt >= (CONFIG_SYS_MMC_MAX_BLK_COUNT)){
+					realblkcnt = CONFIG_SYS_MMC_MAX_BLK_COUNT;
+				}else{
+					realblkcnt = blkcnt ;
+				}
+
+ 				vir_mmc_prepare_sector(mmc,start,realblkcnt);
+				vir_split_write(mmc,start,realblkcnt,(char*)src);
+
+				src += realblkcnt*512;
+				start += realblkcnt;
+				blkcnt -= realblkcnt;
+			}
+	}
+	return blkcnt;
+
+}
+
+static ulong vir_split_write(struct mmc *mmc,lbaint_t start,
+								lbaint_t blkcnt,void *src)
+{
+
+	struct vir_mmc *vir_mmc = (struct vir_mmc *)(mmc->priv);
+	pTRANS_PAR card_a_trs_par = &(vir_mmc->phy_mmca->card_trs_par);
+	pTRANS_PAR card_b_trs_par = &(vir_mmc->phy_mmcb->card_trs_par);
+	char * bufa_start;
+	char * bufb_start;
+	char * bufa_bak	=  card_a_trs_par->buf;
+	char * bufb_bak	=  card_b_trs_par->buf;
+
+	unsigned long chunk_num =  start/DAID0_CHUCK_SECORT;
+	int i = 0;
+
+	if( chunk_num%2 == 0){
+		bufa_start = src;
+		/*start from carda*/
+		for(i=0;i<card_a_trs_par->vailnum;i++){
+			memcpy(card_a_trs_par->buf,bufa_start,512*card_a_trs_par->table[i]);
+			bufa_start+=(DAID0_CHUCK_SIZE+512*card_a_trs_par->table[i]);
+			card_a_trs_par->buf += 512*card_a_trs_par->table[i];
+		}
+
+		bufb_start = src+512*card_a_trs_par->table[0];
+		/*start from carda*/
+		for(i=0;i<card_b_trs_par->vailnum;i++){
+			memcpy(card_b_trs_par->buf,bufb_start,512*card_b_trs_par->table[i]);
+			bufb_start+=(DAID0_CHUCK_SIZE+512*card_b_trs_par->table[i]);
+			card_b_trs_par->buf += 512*card_b_trs_par->table[i];
+		}
+	}else{
+		/*start from cardb*/
+		bufb_start = src;
+		for(i=0;i<card_b_trs_par->vailnum;i++){
+			memcpy(card_b_trs_par->buf,bufb_start,512*card_b_trs_par->table[i]);
+			bufb_start+=(DAID0_CHUCK_SIZE+512*card_b_trs_par->table[i]);
+			card_b_trs_par->buf += 512*card_b_trs_par->table[i];
+		}
+
+		/*start from carda*/
+		bufa_start = src+512*card_b_trs_par->table[0];
+		for(i=0;i<card_a_trs_par->vailnum;i++){
+			memcpy(card_a_trs_par->buf,bufa_start,512*card_a_trs_par->table[i]);
+			bufa_start+=(DAID0_CHUCK_SIZE+512*card_a_trs_par->table[i]);
+			card_a_trs_par->buf += 512*card_a_trs_par->table[i];
+		}
+	}
+
+	card_a_trs_par->buf = bufa_bak;
+	card_b_trs_par->buf = bufb_bak;
+
+	if( phy_mmc_bwrite( vir_mmc->phy_mmca,card_a_trs_par->start_sec,
+		card_a_trs_par->sec_num,card_a_trs_par->buf)!= card_a_trs_par->sec_num){
+		printf("%s:err phy_mmc_bwrite\n",__FUNCTION__);
+	}
+	if( phy_mmc_bwrite( vir_mmc->phy_mmcb,card_b_trs_par->start_sec,
+		card_b_trs_par->sec_num,card_b_trs_par->buf)!= card_b_trs_par->sec_num){
+		printf("%s:err phy_mmc_bwrite\n",__FUNCTION__);
+	}
+
+	return blkcnt;
+
+}
+
+

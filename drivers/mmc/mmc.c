@@ -6,7 +6,6 @@
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
-
 #include <config.h>
 #include <common.h>
 #include <command.h>
@@ -20,11 +19,15 @@
 
 static struct list_head mmc_devices;
 static int cur_dev_num = -1;
+unsigned int g_mmc_id = 0;
 
 __weak int board_mmc_getwp(struct mmc *mmc)
 {
 	return -1;
 }
+static ulong vir_merge_read(struct mmc *mmc,lbaint_t start,
+								lbaint_t blkcnt,void *dst);
+static ulong phy_mmc_bread(struct mmc *mmc,lbaint_t start, lbaint_t blkcnt, void *dst);
 
 int mmc_getwp(struct mmc *mmc)
 {
@@ -231,15 +234,63 @@ static int mmc_read_blocks(struct mmc *mmc, void *dst, lbaint_t start,
 	return blkcnt;
 }
 
-static ulong mmc_bread(int dev_num, lbaint_t start, lbaint_t blkcnt, void *dst)
+ ulong mmc_bread(int dev_num, lbaint_t start, lbaint_t blkcnt, void *dst)
+{
+	lbaint_t realblkcnt = 0;
+	lbaint_t	blkcntbak = blkcnt;
+	struct vir_mmc *vir_mmc = NULL;
+	struct mmc *phymmc = NULL;
+
+	struct mmc *mmc = find_mmc_device(dev_num);
+	if ((!mmc) ||(!dst) ){
+		printf("%s: mmc :%lx  dst : %lx\n",__FUNCTION__,(unsigned long)mmc,
+			(unsigned long)dst);
+		return -1;
+	}
+	vir_mmc = (struct vir_mmc *)(mmc->priv);
+	if(!vir_mmc){
+		printf("%s:%d:vir_mmc is NULL\n",__FUNCTION__,__LINE__);
+		return -1;
+	}
+
+	if(vir_mmc->dual_mmc_en == 0){
+		/* singal channel process*/
+		phymmc = vir_mmc->phy_mmca;
+		if(phy_mmc_bread(phymmc,start, blkcnt, dst)!=blkcnt){
+			printf("err:%s:%d phy_mmc_bread \n",__FUNCTION__,__LINE__);
+			return -1;
+		}
+	}else{
+		debug("%s %d\n",__FUNCTION__,__LINE__);
+		while(1){
+
+				if(blkcnt == 0){
+				/*trasnfer finish ,resume blkcnt for return value*/
+					blkcnt = blkcntbak;
+					break;
+				}else if(blkcnt >= (CONFIG_SYS_MMC_MAX_BLK_COUNT)){
+					realblkcnt = CONFIG_SYS_MMC_MAX_BLK_COUNT;
+				}else{
+					realblkcnt = blkcnt ;
+				}
+				vir_mmc_prepare_sector(mmc,start,realblkcnt);
+				vir_merge_read(mmc,start,realblkcnt,(char*)dst);
+
+				dst += realblkcnt*512;
+				start += realblkcnt;
+				blkcnt -= realblkcnt;
+			}
+	}
+
+	return blkcnt;
+}
+
+
+static ulong phy_mmc_bread(struct mmc *mmc,lbaint_t start, lbaint_t blkcnt, void *dst)
 {
 	lbaint_t cur, blocks_todo = blkcnt;
 
 	if (blkcnt == 0)
-		return 0;
-
-	struct mmc *mmc = find_mmc_device(dev_num);
-	if (!mmc)
 		return 0;
 
 	if ((start + blkcnt) > mmc->block_dev.lba) {
@@ -262,6 +313,207 @@ static ulong mmc_bread(int dev_num, lbaint_t start, lbaint_t blkcnt, void *dst)
 		start += cur;
 		dst += cur * mmc->read_bl_len;
 	} while (blocks_todo > 0);
+
+	return blkcnt;
+}
+
+ ulong vir_mmc_prepare_sector(struct mmc *mmc,lbaint_t start,
+								lbaint_t blkcnt)
+{
+	struct vir_mmc *vir_mmc = (struct vir_mmc *)(mmc->priv);
+	pTRANS_PAR card_a_trs_par = &(vir_mmc->phy_mmca->card_trs_par);
+	pTRANS_PAR card_b_trs_par = &(vir_mmc->phy_mmcb->card_trs_par);
+
+	unsigned long chunk_num =  start/DAID0_CHUCK_SECORT;
+	unsigned long start_sector_offset =  start%DAID0_CHUCK_SECORT;
+	long fil_sector = DAID0_CHUCK_SECORT-start_sector_offset;
+	lbaint_t remain_blkcnt = blkcnt;
+
+	card_a_trs_par->start_sec = 0;
+	card_a_trs_par->sec_num = 0;
+	card_a_trs_par->vailnum = 0;
+	card_b_trs_par->start_sec = 0;
+	card_b_trs_par->sec_num = 0;
+	card_b_trs_par->vailnum = 0;
+
+	debug("start:%lx blkcnt:%lx\n",start,blkcnt);
+
+	if(chunk_num%2 == 0){
+
+		card_a_trs_par->start_sec = start_sector_offset+(chunk_num/2)*DAID0_CHUCK_SECORT;
+		card_b_trs_par->start_sec = (chunk_num/2)*DAID0_CHUCK_SECORT;
+
+		/*start from carda*/
+		if(remain_blkcnt <= fil_sector ){
+			/* stop here, there is on data to process*/
+			card_a_trs_par->sec_num += remain_blkcnt;
+			card_a_trs_par->table[card_a_trs_par->vailnum] = remain_blkcnt;
+			card_a_trs_par->vailnum ++;
+			remain_blkcnt =0;
+			goto out;
+
+		}else{
+			card_a_trs_par->sec_num += fil_sector;
+			card_a_trs_par->table[card_a_trs_par->vailnum] = fil_sector;
+			card_a_trs_par->vailnum ++;
+			remain_blkcnt -= fil_sector;
+		}
+
+		do{
+			/*prepar cardb*/
+			if(remain_blkcnt == 0 )
+				break;
+
+			if(remain_blkcnt <= DAID0_CHUCK_SECORT){
+				card_b_trs_par->sec_num += remain_blkcnt;
+				card_b_trs_par->table[card_b_trs_par->vailnum] = remain_blkcnt;
+				card_b_trs_par->vailnum ++;
+				remain_blkcnt = 0;
+				break;
+			}else{
+				card_b_trs_par->sec_num += DAID0_CHUCK_SECORT;
+				card_b_trs_par->table[card_b_trs_par->vailnum] = DAID0_CHUCK_SECORT;
+				card_b_trs_par->vailnum ++;
+				remain_blkcnt -= DAID0_CHUCK_SECORT;
+			}
+			/*prepar carda*/
+			if(remain_blkcnt <= DAID0_CHUCK_SECORT){
+				card_a_trs_par->sec_num += remain_blkcnt;
+				card_a_trs_par->table[card_a_trs_par->vailnum] = remain_blkcnt;
+				card_a_trs_par->vailnum ++;
+				remain_blkcnt =  0;
+				break;
+			}else{
+				card_a_trs_par->sec_num += DAID0_CHUCK_SECORT;
+				remain_blkcnt -= DAID0_CHUCK_SECORT;
+				card_a_trs_par->table[card_a_trs_par->vailnum] = DAID0_CHUCK_SECORT;
+				card_a_trs_par->vailnum ++;
+			}
+
+		}while(1);
+
+	}else{
+		card_b_trs_par->start_sec = start_sector_offset+(chunk_num/2)*DAID0_CHUCK_SECORT;
+		card_a_trs_par->start_sec = (chunk_num/2+1)*DAID0_CHUCK_SECORT;
+
+		if(remain_blkcnt <= fil_sector ){
+			/* stop here, there is on data to process*/
+			card_b_trs_par->sec_num += remain_blkcnt;
+			card_b_trs_par->table[card_b_trs_par->vailnum] = remain_blkcnt;
+			card_b_trs_par->vailnum ++;
+			remain_blkcnt =0;
+			goto out;
+
+		}else{
+			card_b_trs_par->sec_num += fil_sector;
+			card_b_trs_par->table[card_b_trs_par->vailnum] = fil_sector;
+			card_b_trs_par->vailnum ++;
+			remain_blkcnt -= fil_sector;
+		}
+
+		/* start fromm carda*/
+		do{
+			if(remain_blkcnt == 0 )
+				break;
+
+			/*prepar carda*/
+			if(remain_blkcnt <= DAID0_CHUCK_SECORT){
+				card_a_trs_par->sec_num += remain_blkcnt;
+				card_a_trs_par->table[card_a_trs_par->vailnum] = remain_blkcnt;
+				card_a_trs_par->vailnum ++;
+				remain_blkcnt = 0;
+				break;
+			}else{
+				card_a_trs_par->sec_num += DAID0_CHUCK_SECORT;
+				card_a_trs_par->table[card_a_trs_par->vailnum] = DAID0_CHUCK_SECORT;
+				card_a_trs_par->vailnum ++;
+				remain_blkcnt -= DAID0_CHUCK_SECORT;
+			}
+			/*prepar cardb*/
+			if(remain_blkcnt <= DAID0_CHUCK_SECORT){
+				card_b_trs_par->sec_num += remain_blkcnt;
+				card_b_trs_par->table[card_b_trs_par->vailnum] = remain_blkcnt;
+				card_b_trs_par->vailnum ++;
+				remain_blkcnt = 0;
+				break;
+			}else{
+				card_b_trs_par->sec_num += DAID0_CHUCK_SECORT;
+				card_b_trs_par->table[card_b_trs_par->vailnum] = DAID0_CHUCK_SECORT;
+				card_b_trs_par->vailnum ++;
+				remain_blkcnt -= DAID0_CHUCK_SECORT;
+			}
+
+		}while(1);
+	}
+out:
+	return 0;
+}
+
+
+static ulong vir_merge_read(struct mmc *mmc,lbaint_t start,
+								lbaint_t blkcnt,void *dst)
+{
+
+	struct vir_mmc *vir_mmc = (struct vir_mmc *)(mmc->priv);
+	pTRANS_PAR card_a_trs_par = &(vir_mmc->phy_mmca->card_trs_par);
+	pTRANS_PAR card_b_trs_par = &(vir_mmc->phy_mmcb->card_trs_par);
+	char * bufa_start;
+	char * bufb_start;
+	char * bufa_bak	=  card_a_trs_par->buf;
+	char * bufb_bak	=  card_b_trs_par->buf;
+
+	unsigned long chunk_num =  start/DAID0_CHUCK_SECORT;
+	int i = 0;
+
+	if(phy_mmc_bread(vir_mmc->phy_mmca,card_a_trs_par->start_sec,
+		card_a_trs_par->sec_num, card_a_trs_par->buf) != card_a_trs_par->sec_num){
+		printf("err:Aphy_mmc_bread\n");
+		return -1;
+	}
+
+	if(phy_mmc_bread(vir_mmc->phy_mmcb,card_b_trs_par->start_sec,
+		card_b_trs_par->sec_num, card_b_trs_par->buf) != card_b_trs_par->sec_num){
+		printf("err:Bphy_mmc_bread\n");
+		return -1;
+	}
+
+	if( chunk_num%2 == 0){
+
+		bufa_start = dst;
+		/*start from carda*/
+		for(i=0;i<card_a_trs_par->vailnum;i++){
+			memcpy(bufa_start,card_a_trs_par->buf,512*card_a_trs_par->table[i]);
+			bufa_start+=(DAID0_CHUCK_SIZE+512*card_a_trs_par->table[i]);
+			card_a_trs_par->buf+=512*card_a_trs_par->table[i];
+		}
+
+		bufb_start = dst+512*card_a_trs_par->table[0];
+		/*start from cardb*/
+		for(i=0;i<card_b_trs_par->vailnum;i++){
+			memcpy(bufb_start,card_b_trs_par->buf,512*card_b_trs_par->table[i]);
+			bufb_start+=(DAID0_CHUCK_SIZE+512*card_b_trs_par->table[i]);
+			card_b_trs_par->buf+=512*card_b_trs_par->table[i];
+		}
+	}else{
+		/*start from cardb*/
+		bufb_start = dst;
+		for(i=0;i<card_b_trs_par->vailnum;i++){
+			memcpy(bufb_start,card_b_trs_par->buf,512*card_b_trs_par->table[i]);
+			bufb_start+=(DAID0_CHUCK_SIZE+512*card_b_trs_par->table[i]);
+			card_b_trs_par->buf+=512*card_b_trs_par->table[i];
+		}
+
+		/*start from carda*/
+		bufa_start = dst+512*card_b_trs_par->table[0];
+		for(i=0;i<card_a_trs_par->vailnum;i++){
+			memcpy(bufa_start,card_a_trs_par->buf,512*card_a_trs_par->table[i]);
+			bufa_start+=(DAID0_CHUCK_SIZE+512*card_a_trs_par->table[i]);
+			card_a_trs_par->buf+=512*card_a_trs_par->table[i];
+		}
+	}
+
+	card_a_trs_par->buf = bufa_bak;
+	card_b_trs_par->buf = bufb_bak;
 
 	return blkcnt;
 }
@@ -568,6 +820,7 @@ int mmc_select_hwpart(int dev_num, int hwpart)
 {
 	struct mmc *mmc = find_mmc_device(dev_num);
 	int ret;
+
 
 	if (!mmc)
 		return -ENODEV;
@@ -1046,6 +1299,7 @@ static int mmc_startup(struct mmc *mmc)
 		return err;
 
 	memcpy(mmc->cid, cmd.response, 16);
+	g_mmc_id = cmd.response[0];
 
 	/*
 	 * For MMC cards, set the Relative Address.
@@ -1479,9 +1733,21 @@ static int mmc_startup(struct mmc *mmc)
 #endif
 #if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_LIBDISK_SUPPORT)
 	init_part(&mmc->block_dev);
+
 #endif
 
 	return 0;
+}
+
+void mmc_set_vir_cap(struct mmc *mmc)
+{
+	struct vir_mmc *vir_mmc = (struct vir_mmc *)(mmc->priv);
+#ifdef DUAL_EMMC
+	mmc->block_dev.lba = vir_mmc->phy_mmca->block_dev.lba << 1;
+#else
+	mmc->block_dev.lba = vir_mmc->phy_mmca->block_dev.lba;
+#endif
+
 }
 
 static int mmc_send_if_cond(struct mmc *mmc)
@@ -1520,17 +1786,40 @@ struct mmc *mmc_create(const struct mmc_config *cfg, void *priv)
 {
 	struct mmc *mmc;
 
-	/* quick validation */
-	if (cfg == NULL || cfg->ops == NULL || cfg->ops->send_cmd == NULL ||
-			cfg->f_min == 0 || cfg->f_max == 0 || cfg->b_max == 0)
-		return NULL;
-
 	mmc = calloc(1, sizeof(*mmc));
 	if (mmc == NULL)
 		return NULL;
 
 	mmc->cfg = cfg;
 	mmc->priv = priv;
+	/* the following chunk was mmc_register() */
+
+	/* Setup dsr related values */
+	mmc->dsr_imp = 0;
+	mmc->dsr = 0xffffffff;
+	/* Setup the universal parts of the block interface just once */
+	mmc->block_dev.if_type = IF_TYPE_MMC;
+
+	mmc->block_dev.removable = 1;
+	mmc->block_dev.block_read = mmc_bread;
+	mmc->block_dev.block_write = mmc_bwrite;
+	mmc->block_dev.block_erase = mmc_berase;
+	/* setup initial part type */
+	mmc->block_dev.part_type = mmc->cfg->part_type;
+
+	return mmc;
+}
+
+struct mmc *mmc_vir_create(const struct mmc_config *cfg,
+								struct vir_mmc* vir_mmc)
+{
+	struct mmc *mmc;
+	mmc = calloc(1, sizeof(*mmc));
+	if (mmc == NULL)
+		return NULL;
+
+	mmc->cfg = cfg;
+	mmc->priv = vir_mmc;
 
 	/* the following chunk was mmc_register() */
 
@@ -1544,12 +1833,11 @@ struct mmc *mmc_create(const struct mmc_config *cfg, void *priv)
 	mmc->block_dev.block_read = mmc_bread;
 	mmc->block_dev.block_write = mmc_bwrite;
 	mmc->block_dev.block_erase = mmc_berase;
-
+	mmc->block_dev.blksz = 512;
 	/* setup initial part type */
 	mmc->block_dev.part_type = mmc->cfg->part_type;
 
 	INIT_LIST_HEAD(&mmc->link);
-
 	list_add_tail(&mmc->link, &mmc_devices);
 
 	return mmc;
@@ -1565,7 +1853,8 @@ void mmc_destroy(struct mmc *mmc)
 block_dev_desc_t *mmc_get_dev(int dev)
 {
 	struct mmc *mmc = find_mmc_device(dev);
-	if (!mmc || mmc_init(mmc))
+
+	if (!mmc )
 		return NULL;
 
 	return &mmc->block_dev;
@@ -1622,7 +1911,6 @@ int mmc_start_init(struct mmc *mmc)
 
 	/* Now try to get the SD card's operating condition */
 	err = sd_send_op_cond(mmc);
-
 	/* If the command timed out, we check for an MMC card */
 	if (err == TIMEOUT) {
 		err = mmc_send_op_cond(mmc);
