@@ -1,0 +1,30 @@
+/*
+ * Copyright (c) 2015 Actions Semi Co., Ltd.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
+ */
+
+/dts-v1/;
+
+#include "s900.dtsi"
+
+/ {
+	model = "s900 upgrade";
+	compatible = "actions,s900_upgrade", "actions,s900";
+
+	chosen {
+		stdout-path = &serial5;
+	};
+
+	clock:e0160000 {
+		compatible = "actions,owl-clk";
+		core_pll = <1104>;
+		dev_pll = <660>;
+		display_pll = <1056>;
+	};
+
+	xhci@e0400000 {
+		actions,vbus-gpio = <&gpiod 1 0>;  /* GPIOD1,  1: low active; 0: high active */
+	};
+
+};

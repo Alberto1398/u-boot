@@ -618,6 +618,12 @@ config OMAP54XX
 	select CPU_V7
 	select SUPPORT_SPL
 
+config ARCH_OWL
+	bool "Actions OWL SoC"
+	select OF_CONTROL
+	select DM
+	select DM_SERIAL
+
 config RMOBILE
 	bool "Renesas ARM SoCs"
 	select CPU_V7
@@ -848,6 +854,8 @@ source "arch/arm/cpu/armv7/omap4/Kconfig"
 source "arch/arm/cpu/armv7/omap5/Kconfig"
 
 source "arch/arm/mach-orion5x/Kconfig"
+
+source "arch/arm/mach-owl/Kconfig"
 
 source "arch/arm/cpu/armv7/rmobile/Kconfig"
 

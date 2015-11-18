@@ -14,6 +14,10 @@ dtb-$(CONFIG_EXYNOS5) += exynos5250-arndale.dtb \
 	exynos5420-peach-pit.dtb \
 	exynos5800-peach-pi.dtb \
 	exynos5422-odroidxu3.dtb
+
+dtb-$(CONFIG_S900) += s900_evb.dtb s900_upgrade.dtb s900_evb_216ball.dtb \
+		      s900_96board.dtb gt9_ebox.dtb s900_vr.dtb
+
 dtb-$(CONFIG_TEGRA) += tegra20-harmony.dtb \
 	tegra20-medcom-wide.dtb \
 	tegra20-paz00.dtb \
