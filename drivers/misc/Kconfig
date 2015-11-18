@@ -73,3 +73,24 @@ config PCA9551_I2C_ADDR
 	default 0x60
 	help
 	  The I2C address of the PCA9551 LED controller.
+
+config DM_PMIC_ATC260X_MFD_PSTORE
+	bool "ATX260X multiple function device"
+	depends on DM_PMIC_ATC2609A || DM_PMIC_ATC2603C
+	default y
+	help
+	  ATX260X multiple function device pstore.
+	  
+config DM_PMIC_ATC260X_MFD_AUXADC
+	bool "ATX260X multiple function device"
+	depends on DM_PMIC_ATC2609A
+	default y
+	help
+	  ATX260X multiple function device auxadc.
+
+config DM_PMIC_ATC260X_MFD_MISC
+	bool "ATX260X multiple function device"
+	depends on DM_PMIC_ATC2609A
+	default y
+	help
+	  ATX260X multiple function device misc.

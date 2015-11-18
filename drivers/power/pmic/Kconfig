@@ -41,3 +41,24 @@ config DM_PMIC_SANDBOX
 	  - set by i2c emul driver's probe() (defaults in header)
 
 	Driver binding info: doc/device-tree-bindings/pmic/sandbox.txt
+config DM_PMIC_ATC2609A
+	bool "Enable Driver Model for PMIC ATC2609A"
+	depends on DM_PMIC
+	---help---
+	This config enables implementation of driver-model pmic uclass features
+	for PMIC ATC2609A. The driver implements read/write operations.
+	
+config DM_PMIC_ATC2603C
+	bool "Enable Driver Model for PMIC ATC2603C"
+	depends on DM_PMIC
+	---help---
+	This config enables implementation of driver-model pmic uclass features
+	for PMIC ATC2603C. The driver implements read/write operations.
+	
+config DM_PMIC_ATC260X
+	bool "Enable Driver Model for PMIC ATC260X"
+	depends on DM_PMIC_ATC2609A || DM_PMIC_ATC2603C
+	default y
+	---help---
+	This config enables implementation of driver-model pmic uclass features
+	for PMIC ATC260X. The driver implements read/write operations.

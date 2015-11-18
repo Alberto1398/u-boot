@@ -8,6 +8,9 @@
 obj-$(CONFIG_DM_PMIC) += pmic-uclass.o
 obj-$(CONFIG_DM_PMIC_MAX77686) += max77686.o
 obj-$(CONFIG_DM_PMIC_SANDBOX) += sandbox.o i2c_pmic_emul.o
+obj-$(CONFIG_DM_PMIC_ATC2609A) +=pmic_atc2609a.o
+obj-$(CONFIG_DM_PMIC_ATC2603C) +=pmic_atc2603c.o
+obj-$(CONFIG_DM_PMIC_ATC260X) +=atc260x/
 obj-$(CONFIG_POWER_LTC3676) += pmic_ltc3676.o
 obj-$(CONFIG_POWER_MAX8998) += pmic_max8998.o
 obj-$(CONFIG_POWER_MAX8997) += pmic_max8997.o

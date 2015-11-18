@@ -61,3 +61,19 @@ config DM_REGULATOR_SANDBOX
 
 	A detailed information can be found in header: '<power/sandbox_pmic.h>'
 	Binding info: 'doc/device-tree-bindings/pmic/max77686.txt'
+
+config DM_REGULATOR_ATC2609A
+	bool "Enable Driver Model for REGULATOR ATC2609A"
+	depends on DM_REGULATOR && DM_PMIC_ATC2609A
+	---help---
+	This config enables implementation of driver-model regulator uclass
+	features for REGULATOR ATC2609A. The driver implements get/set api for:
+	value, enable and mode.
+
+config DM_REGULATOR_ATC2603C
+	bool "Enable Driver Model for REGULATOR ATC2603C"
+	depends on DM_REGULATOR && DM_PMIC_ATC2603C
+	---help---
+	This config enables implementation of driver-model regulator uclass
+	features for REGULATOR ATC2603C. The driver implements get/set api for:
+	value, enable and mode.

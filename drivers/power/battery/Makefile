@@ -7,3 +7,6 @@
 
 obj-$(CONFIG_POWER_BATTERY_TRATS) += bat_trats.o
 obj-$(CONFIG_POWER_BATTERY_TRATS2) += bat_trats2.o
+obj-$(CONFIG_POWER_BATTERY_ATC2609A) += atc2609a_battery.o
+obj-$(CONFIG_POWER_BATTERY_ATC260X) += atc260x_battery.o
+obj-$(CONFIG_POWER_BATTERY) += power_battery.o

@@ -14,3 +14,9 @@ obj-$(CONFIG_PS2MULT) += ps2mult.o ps2ser.o
 endif
 obj-y += input.o
 obj-$(CONFIG_OF_CONTROL) += key_matrix.o
+ifdef CONFIG_ATC260X_ADCKEY
+obj-y += atc260x_adckey.o
+endif
+ifdef CONFIG_ATC260X_IRKEY
+obj-y += atc260x_irkey.o
+endif
