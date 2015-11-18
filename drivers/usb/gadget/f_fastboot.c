@@ -23,6 +23,10 @@
 #ifdef CONFIG_FASTBOOT_FLASH_MMC_DEV
 #include <fb_mmc.h>
 #endif
+#include <power/atc260x/owl_atc260x.h>
+#include <vsprintf.h>
+#include <android_image.h>
+#include <image.h>
 
 #define FASTBOOT_VERSION		"0.4"
 
@@ -121,6 +125,40 @@ static struct usb_gadget_strings *fastboot_strings[] = {
 	&stringtab_fastboot,
 	NULL,
 };
+/**********flash partion write command*********/
+struct flash_cmd {
+	const char *cmd_name;
+	int devNo;
+	int	(*do_write)(struct flash_cmd *, int boot_write);
+};
+
+static int boot_write(struct flash_cmd *cmd_data, int erase_write);
+
+static struct flash_cmd boot_cmd = {
+	.cmd_name = "bootloader",
+	.devNo = 0,
+	.do_write = boot_write,
+};
+static struct flash_cmd uboot_cmd = {
+	.cmd_name = "boot",
+	.devNo = 1,
+	.do_write = boot_write,
+};
+
+
+
+static struct flash_cmd *st_flash_cmd[] = {
+	(struct flash_cmd *)&boot_cmd,
+	(struct flash_cmd *)&uboot_cmd,
+	NULL,
+};
+
+#define BOOT_MAGIC_SIZE 8
+#define BOOT_NAME_SIZE 16
+#define BOOT_ARGS_SIZE 512
+
+
+/********** end*********/
 
 static void rx_handler_command(struct usb_ep *ep, struct usb_request *req);
 static int strcmp_l1(const char *s1, const char *s2);
@@ -324,7 +362,7 @@ static int fastboot_tx_write_str(const char *buffer)
 
 static void compl_do_reset(struct usb_ep *ep, struct usb_request *req)
 {
-	do_reset(NULL, 0, 0, NULL);
+	atc260x_misc_reset_machine(OWL_PMIC_REBOOT_TGT_NORMAL);
 }
 
 int __weak fb_set_reboot_flag(void)
@@ -335,11 +373,9 @@ int __weak fb_set_reboot_flag(void)
 static void cb_reboot(struct usb_ep *ep, struct usb_request *req)
 {
 	char *cmd = req->buf;
+
 	if (!strcmp_l1("reboot-bootloader", cmd)) {
-		if (fb_set_reboot_flag()) {
-			fastboot_tx_write_str("FAILCannot set reboot flag");
-			return;
-		}
+		atc260x_pstore_set(ATC260X_PSTORE_TAG_BOOTLOADER, 1);
 	}
 	fastboot_func->in_req->complete = compl_do_reset;
 	fastboot_tx_write_str("OKAY");
@@ -495,18 +531,50 @@ static void cb_download(struct usb_ep *ep, struct usb_request *req)
 	fastboot_tx_write_str(response);
 }
 
+void owl_debug_dump_mem(char *label, void *base, int len)
+{
+	int i, j;
+	char *data = base;
+	printf("%s: dump of %d bytes of data at 0x%llx\n",
+		label, len, (long long)data);
+
+	for (i = 0; i < len; i += 16) {
+		printf("%x: ", i);
+		for (j = 0; j < 16; j++) {
+			if ((i + j < len))
+				printf("%x ", data[i + j]);
+			else
+				printf("   ");
+		}
+
+		printf("\n");
+	}
+
+}
+
 static void do_bootm_on_complete(struct usb_ep *ep, struct usb_request *req)
 {
-	char boot_addr_start[12];
-	char *bootm_args[] = { "bootm", boot_addr_start, NULL };
+	unsigned int kernel_addr, ramdisk_addr, dtb_addr;
+	ulong data, len;
+	struct andr_img_hdr *hdr;
+	char *ptr = ((char *)CONFIG_USB_FASTBOOT_BUF_ADDR);
+	char *string;
 
-	puts("Booting kernel..\n");
+	hdr = (struct andr_img_hdr *)ptr;
+	kernel_addr = simple_strtol(getenv("kernel_addr_r"), &string, 0);
+	ramdisk_addr = simple_strtol(getenv("ramdisk_addr_r"), &string, 0);
+	dtb_addr = simple_strtol(getenv("fdt_addr_r"), &string, 0);
 
-	sprintf(boot_addr_start, "0x%lx", load_addr);
-	do_bootm(NULL, 0, 2, bootm_args);
+	android_image_get_kernel(hdr, 0, &data, &len);
+	memcpy((void *)(long)kernel_addr, (void *)(long)data, len);
+	android_image_get_ramdisk(hdr, &data, &len);
+	memcpy((void *)(long)ramdisk_addr, (void *)(long)data, len);
+	android_image_get_dt(hdr, &data, &len);
+	memcpy((void *)(long)dtb_addr, (void *)(long)data, len);
 
+	printf("size of dt is 0x%x\n", hdr->dt_size);
+	run_command(getenv("ramboot"), 0);
 	/* This only happens if image is somehow faulty so we start over */
-	do_reset(NULL, 0, 0, NULL);
 }
 
 static void cb_boot(struct usb_ep *ep, struct usb_request *req)
@@ -515,9 +583,90 @@ static void cb_boot(struct usb_ep *ep, struct usb_request *req)
 	fastboot_tx_write_str("OKAY");
 }
 
+void VDL_WriteBootloader(char *bootloaderBuffer, int StartBlock, int bootloaderSize, int flag);
+
+/*
+ *erase : 1 -- erase
+ *        0 -- write
+*/
+static int boot_write(struct flash_cmd *cmd_data, int erase_write)
+{
+	const char *ifname;
+	int ret, i;
+	block_dev_desc_t *dev_desc;
+	int owl_dev = 0, *start , *size;
+	int start_mbrc[4] = {4097, 8193, 5097, 9193}, size_mbrc[4] = {2047, 2047, 8, 8};
+	int start_uboot[4] = {6144, 10240, 0, 0}, size_uboot[4] = {2048, 2048, 0, 0};
+
+	#if (CONFIG_FASTBOOT_FLASH_MMC_DEV == 1)
+	setenv("devif", "mmc");
+	#endif
+
+	#if (CONFIG_FASTBOOT_FLASH_MMC_DEV == 0)
+	setenv("devif", "nand");
+	#endif
+
+	ifname = getenv("devif");
+	if (ifname == NULL) {
+		printf("fastboot: get devif fail\n");
+		return -1;
+	}
+
+	if (cmd_data->devNo == 0) {
+		printf("erase mbrec\n");
+		start = start_mbrc;
+		size = size_mbrc;
+	}
+	if (cmd_data->devNo == 1) {
+		printf("erase uboot\n");
+		start = start_uboot;
+		size = size_uboot;
+	}
+	if (strcmp(ifname, "nand") == 0) {
+		owl_dev = 0;
+	} else if (strcmp(ifname, "mmc") == 0) {
+		owl_dev = 1;
+	}
+
+	printf("ifname = %s, owl_dev = %d\n", ifname, owl_dev);
+
+	dev_desc = get_dev(ifname, owl_dev);
+	if (dev_desc == NULL) {
+			printf("Failed to find %s:%d\n", ifname, cmd_data->devNo);
+			return -1;
+	}
+
+	if (erase_write == 1) {
+		memset((void *)CONFIG_USB_FASTBOOT_BUF_ADDR, 0, 1024*1024);
+	}
+
+	printf("ifname = %s\n", ifname);
+#ifdef CONFIG_OWL_NAND
+	if (strcmp(ifname, "nand") == 0) {
+		if (cmd_data->devNo == 0)
+			VDL_WriteBootloader((void *)CONFIG_USB_FASTBOOT_BUF_ADDR, 0, 1024*1024, 0);
+		if (cmd_data->devNo == 1)
+			VDL_WriteBootloader((void *)CONFIG_USB_FASTBOOT_BUF_ADDR, 4, 1024*1024, 1);
+	}
+#endif
+	if (strcmp(ifname, "mmc") == 0) {
+		for (i = 0; start[i] != 0; i++) {
+			ret = dev_desc->block_write(owl_dev, start[i], size[i], (void *)CONFIG_USB_FASTBOOT_BUF_ADDR);
+			if (ret != size[i]) {
+				return -1;
+			}
+		}
+	}
+
+	printf("ifname = %s\n", ifname);
+	return 0;
+}
+
+
 static void do_exit_on_complete(struct usb_ep *ep, struct usb_request *req)
 {
 	g_dnl_trigger_detach();
+	run_command(getenv("bootcmd"), 0);
 }
 
 static void cb_continue(struct usb_ep *ep, struct usb_request *req)
@@ -531,6 +680,8 @@ static void cb_flash(struct usb_ep *ep, struct usb_request *req)
 {
 	char *cmd = req->buf;
 	char response[RESPONSE_LEN];
+	struct flash_cmd *pcmd;
+	int i;
 
 	strsep(&cmd, ":");
 	if (!cmd) {
@@ -540,12 +691,28 @@ static void cb_flash(struct usb_ep *ep, struct usb_request *req)
 	}
 
 	strcpy(response, "FAILno flash device defined");
-#ifdef CONFIG_FASTBOOT_FLASH_MMC_DEV
+	for (i = 0; (pcmd = st_flash_cmd[i]) != NULL ; i++) {
+		if (!strcmp_l1(pcmd->cmd_name, cmd))
+				break;
+	}
+	if (pcmd != NULL) {
+		printf("flash writing ...\n");
+		if (pcmd->do_write(pcmd, 0) != 0) {
+			fastboot_tx_write_str("FAILwrite fail");
+		} else {
+			fastboot_tx_write_str("OKAY");
+		}
+
+		return ;
+	}
+
+	#ifdef CONFIG_FASTBOOT_FLASH_MMC_DEV
 	fb_mmc_flash_write(cmd, (void *)CONFIG_USB_FASTBOOT_BUF_ADDR,
-			   download_bytes, response);
-#endif
+		 download_bytes, response);
+	#endif
 	fastboot_tx_write_str(response);
 }
+
 #endif
 
 static void cb_oem(struct usb_ep *ep, struct usb_request *req)
@@ -554,27 +721,28 @@ static void cb_oem(struct usb_ep *ep, struct usb_request *req)
 #ifdef CONFIG_FASTBOOT_FLASH
 	if (strncmp("format", cmd + 4, 6) == 0) {
 		char cmdbuf[32];
-                sprintf(cmdbuf, "gpt write mmc %x $partitions",
+		sprintf(cmdbuf, "gpt write mmc %x $partitions",
 			CONFIG_FASTBOOT_FLASH_MMC_DEV);
-                if (run_command(cmdbuf, 0))
+		if (run_command(cmdbuf, 0))
 			fastboot_tx_write_str("FAIL");
-                else
+		else
 			fastboot_tx_write_str("OKAY");
 	} else
 #endif
 	if (strncmp("unlock", cmd + 4, 8) == 0) {
 		fastboot_tx_write_str("FAILnot implemented");
-	}
-	else {
+	} else {
 		fastboot_tx_write_str("FAILunknown oem command");
 	}
 }
+
 
 #ifdef CONFIG_FASTBOOT_FLASH
 static void cb_erase(struct usb_ep *ep, struct usb_request *req)
 {
 	char *cmd = req->buf;
 	char response[RESPONSE_LEN];
+	int ret;
 
 	strsep(&cmd, ":");
 	if (!cmd) {
@@ -584,13 +752,31 @@ static void cb_erase(struct usb_ep *ep, struct usb_request *req)
 	}
 
 	strcpy(response, "FAILno flash device defined");
-
 #ifdef CONFIG_FASTBOOT_FLASH_MMC_DEV
+	if (strcmp(cmd, "bootloader") == 0) {
+		ret = boot_write(&boot_cmd, 1);
+		if (ret == 0) {
+			strcpy(response, "OKAY");
+			goto end;
+		}
+	}
+
+	if (strcmp(cmd, "boot") == 0) {
+		ret = boot_write(&uboot_cmd, 1);
+		if (ret == 0) {
+			strcpy(response, "OKAY");
+			goto end;
+		}
+	}
+
 	fb_mmc_erase(cmd, response);
 #endif
+end:
 	fastboot_tx_write_str(response);
 }
 #endif
+
+
 
 struct cmd_dispatch_info {
 	char *cmd;

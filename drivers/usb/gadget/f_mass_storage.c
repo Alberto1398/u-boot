@@ -1476,7 +1476,7 @@ static int throw_away_data(struct fsg_common *common)
 			common->next_buffhd_to_drain = bh->next;
 
 			/* A short packet or an error ends everything */
-			if (bh->outreq->actual != bh->outreq->length ||
+			if (bh->outreq->actual != bh->bulk_out_intended_length ||
 					bh->outreq->status != 0) {
 				raise_exception(common,
 						FSG_STATE_ABORT_BULK_OUT);
@@ -1491,11 +1491,12 @@ static int throw_away_data(struct fsg_common *common)
 		 && common->usb_amount_left > 0) {
 			amount = min(common->usb_amount_left, FSG_BUFLEN);
 
-			/* amount is always divisible by 512, hence by
-			 * the bulk-out maxpacket size */
-			bh->outreq->length = amount;
-			bh->bulk_out_intended_length = amount;
-			bh->outreq->short_not_ok = 1;
+			/*
+			 * Except at the end of the transfer, amount will be
+			 * equal to the buffer size, which is divisible by
+			 * the bulk-out maxpacket size.
+			 */
+			set_bulk_out_req_length(common, bh, amount);
 			START_TRANSFER_OR(common, bulk_out, bh->outreq,
 					  &bh->outreq_busy, &bh->state)
 				/* Don't know what to do if

@@ -629,7 +629,7 @@ int dwc3_uboot_init(struct dwc3_device *dwc3_dev)
 	dwc = PTR_ALIGN(mem, DWC3_ALIGN_MASK + 1);
 	dwc->mem = mem;
 
-	dwc->regs	= (int *)(dwc3_dev->base + DWC3_GLOBALS_REGS_START);
+	dwc->regs	= dwc3_dev->base + DWC3_GLOBALS_REGS_START;
 
 	/* default to highest possible threshold */
 	lpm_nyet_threshold = 0xff;
