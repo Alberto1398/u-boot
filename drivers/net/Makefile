@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier:	GPL-2.0+
 #
-
+obj-$(CONFIG_OWL_MAC) += owl_mac.o
 obj-$(CONFIG_PPC4xx_EMAC) += 4xx_enet.o
 obj-$(CONFIG_ALTERA_TSE) += altera_tse.o
 obj-$(CONFIG_ARMADA100_FEC) += armada100_fec.o
