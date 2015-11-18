@@ -78,6 +78,24 @@ static const char * const compat_names[COMPAT_COUNT] = {
 	COMPAT(COMPAT_INTEL_IRQ_ROUTER, "intel,irq-router"),
 };
 
+/* Actions: fix alignment fault for 64bit CPU */
+#ifdef CONFIG_PHYS_64BIT
+#define fdt_get_addr_from_cell(cell) (fdtdec_get_number(cell, 2))
+#define fdt_get_size_from_cell(cell) (fdtdec_get_number(cell, 2))
+#else
+#define fdt_get_addr_from_cell(cell) (fdtdec_get_number(cell, 1))
+#define fdt_get_size_from_cell(cell) (fdtdec_get_number(cell, 1))
+#endif
+
+/* Helper to read a big number; size is in cells (not bytes) */
+static inline u64 of_read_number(const fdt32_t *cell, int size)
+{
+	u64 r = 0;
+	while (size--)
+		r = (r << 32) | fdt32_to_cpu(*(cell++));
+	return r;
+}
+
 const char *fdtdec_get_compatible(enum fdt_compat_id id)
 {
 	/* We allow reading of the 'unknown' ID for testing purposes */
@@ -95,13 +113,14 @@ fdt_addr_t fdtdec_get_addr_size(const void *blob, int node,
 	cell = fdt_getprop(blob, node, prop_name, &len);
 	if (cell && ((!sizep && len == sizeof(fdt_addr_t)) ||
 		     len == sizeof(fdt_addr_t) * 2)) {
-		fdt_addr_t addr = fdt_addr_to_cpu(*cell);
+		fdt_addr_t addr = fdt_get_addr_from_cell((u32 *)cell);
 		if (sizep) {
 			const fdt_size_t *size;
 
 			size = (fdt_size_t *)((char *)cell +
 					sizeof(fdt_addr_t));
-			*sizep = fdt_size_to_cpu(*size);
+			*sizep = fdt_get_size_from_cell((u32 *)size);
+
 			debug("addr=%08lx, size=%08x\n",
 			      (ulong)addr, *sizep);
 		} else {
@@ -881,8 +900,9 @@ int fdtdec_decode_region(const void *blob, int node, const char *prop_name,
 		return -1;
 	}
 
-	*basep = fdt_addr_to_cpu(*cell);
-	*sizep = fdt_size_to_cpu(cell[1]);
+	*basep = fdt_get_addr_from_cell((u32 *)&cell[0]);
+	*sizep = fdt_get_size_from_cell((u32 *)&cell[1]);
+
 	debug("%s: base=%08lx, size=%lx\n", __func__, (ulong)*basep,
 	      (ulong)*sizep);
 
