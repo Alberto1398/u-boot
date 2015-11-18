@@ -35,3 +35,4 @@ obj-$(CONFIG_PCA9551_LED) += pca9551_led.o
 obj-$(CONFIG_DM_PMIC_ATC260X_MFD_PSTORE) += atc260x-pstore.o
 obj-$(CONFIG_DM_PMIC_ATC260X_MFD_AUXADC) += atc260x-auxadc.o
 obj-$(CONFIG_DM_PMIC_ATC260X_MFD_MISC) += atc260x-misc.o
+obj-y += misc-info/

@@ -94,3 +94,5 @@ config DM_PMIC_ATC260X_MFD_MISC
 	default y
 	help
 	  ATX260X multiple function device misc.
+	  
+source "drivers/misc/misc-info/Kconfig"	  
