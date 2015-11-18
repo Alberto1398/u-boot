@@ -143,3 +143,18 @@ int android_image_get_ramdisk(const struct andr_img_hdr *hdr,
 	*rd_len = hdr->ramdisk_size;
 	return 0;
 }
+
+int android_image_get_dt(const struct andr_img_hdr *hdr,
+			      ulong *rd_data, ulong *rd_len)
+{
+	if (!hdr->dt_size)
+		return -1;
+
+	*rd_data = (unsigned long)hdr;
+	*rd_data += hdr->page_size;
+	*rd_data += ALIGN((hdr->kernel_size) + (hdr->ramdisk_size)
+			+ (hdr->second_size), hdr->page_size);
+
+	*rd_len = hdr->dt_size;
+	return 0;
+}

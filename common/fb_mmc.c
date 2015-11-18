@@ -96,13 +96,20 @@ void fb_mmc_flash_write(const char *cmd, void *download_buffer,
 	/* initialize the response buffer */
 	response_str = response;
 
-	dev_desc = get_dev("mmc", CONFIG_FASTBOOT_FLASH_MMC_DEV);
+	#if(CONFIG_FASTBOOT_FLASH_MMC_DEV == 1)
+	printf("emmc\n");
+	dev_desc = get_dev("mmc", 1);
+	#endif
+
+	#if(CONFIG_FASTBOOT_FLASH_MMC_DEV == 0)
+	printf("nandc\n");
+	dev_desc = get_dev("nand", 0);
+	#endif
 	if (!dev_desc || dev_desc->type == DEV_TYPE_UNKNOWN) {
 		error("invalid mmc device\n");
 		fastboot_fail("invalid mmc device");
 		return;
 	}
-
 	if (strcmp(cmd, CONFIG_FASTBOOT_GPT_NAME) == 0) {
 		printf("%s: updating MBR, Primary and Backup GPT(s)\n",
 		       __func__);
