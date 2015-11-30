@@ -46,6 +46,11 @@
 #define SLOT0                                          0
 #define SLOT2                                          2
 
+/* GPT command */
+#define CONFIG_PARTITION_UUIDS
+#define CONFIG_EFI_PARTITION
+#define CONFIG_RANDOM_UUID
+#define CONFIG_CMD_GPT
 
 /*CHARGER*/
 /*#define CONFIG_ATC260X_CHARGER*/
