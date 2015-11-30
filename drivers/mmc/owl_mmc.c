@@ -17,7 +17,7 @@
 #include <asm/io.h>
 #include <asm/byteorder.h>
 #include <asm/unaligned.h>
-#include <owl_mmc.h>
+#include "owl_mmc.h"
 #include <asm/arch/periph.h>
 #include <asm/arch/pinmux.h>
 #include <asm/arch/clk.h>

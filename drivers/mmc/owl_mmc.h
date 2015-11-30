@@ -2,9 +2,9 @@
 #define _OWL_MMC_H_
 
 #if defined(CONFIG_S900)
-#include <owl_mmc_s900.h>
+#include "owl_mmc_s900.h"
 #elif defined(CONFIG_S700)
-#include <owl_mmc_s700.h>
+#include "owl_mmc_s700.h"
 #else
 #error Unknown SoC type
 #endif
