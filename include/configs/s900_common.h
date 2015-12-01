@@ -47,6 +47,7 @@
 	"loadramdisk=fatload ${devtype} ${devpart} ${ramdisk_addr_r} ramdisk.img\0" \
 	"loadfdt=fatload ${devtype} ${devpart} ${fdt_addr_r} kernel.dtb\0" \
 	"loadbootscr=fatload ${devtype} ${devpart} ${scriptaddr} ${bootscr} \0" \
+	"loadbootscr_linaro=fatload ${devtype} ${bootdisk}:2 ${scriptaddr} ${bootscr} \0" \
 	"loadbootenv=fatload ${devtype} ${devpart} ${scriptaddr} ${bootenv} \0" \
 	"mmcargs=setenv devtype mmc; setenv devpart ${bootdisk}:${bootpart}\0" \
 	"emmcargs=setenv devtype mmc; setenv devpart ${bootdisk}:${bootpart}\0"	\
@@ -63,6 +64,10 @@
 			"run uenvcmd;" \
 		"fi;" \
 		"if run loadbootscr; then " \
+			"echo Jumping to ${bootscr};" \
+			"source ${scriptaddr};" \
+		"fi;" \
+		"if run loadbootscr_linaro; then " \
 			"echo Jumping to ${bootscr};" \
 			"source ${scriptaddr};" \
 		"fi;" \
