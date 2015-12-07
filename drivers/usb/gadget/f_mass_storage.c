@@ -1476,7 +1476,11 @@ static int throw_away_data(struct fsg_common *common)
 			common->next_buffhd_to_drain = bh->next;
 
 			/* A short packet or an error ends everything */
+#ifndef CONFIG_USB_GADGET_ACTIONS
 			if (bh->outreq->actual != bh->outreq->length ||
+#else
+			if (bh->outreq->actual != bh->bulk_out_intended_length ||
+#endif
 					bh->outreq->status != 0) {
 				raise_exception(common,
 						FSG_STATE_ABORT_BULK_OUT);
@@ -1493,9 +1497,13 @@ static int throw_away_data(struct fsg_common *common)
 
 			/* amount is always divisible by 512, hence by
 			 * the bulk-out maxpacket size */
+#ifndef CONFIG_USB_GADGET_ACTIONS
 			bh->outreq->length = amount;
 			bh->bulk_out_intended_length = amount;
 			bh->outreq->short_not_ok = 1;
+#else
+			set_bulk_out_req_length(common, bh, amount);
+#endif
 			START_TRANSFER_OR(common, bulk_out, bh->outreq,
 					  &bh->outreq_busy, &bh->state)
 				/* Don't know what to do if

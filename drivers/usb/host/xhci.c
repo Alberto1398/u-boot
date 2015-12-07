@@ -30,6 +30,10 @@
 #include <asm-generic/errno.h>
 #include "xhci.h"
 
+#ifdef CONFIG_USB_XHCI_OWL
+#include <asm/arch/xhci-owl.h>
+#endif
+
 #ifndef CONFIG_USB_MAX_CONTROLLER_COUNT
 #define CONFIG_USB_MAX_CONTROLLER_COUNT 1
 #endif
@@ -179,6 +183,11 @@ int xhci_reset(struct xhci_hcor *hcor)
 	u32 state;
 	int ret;
 
+#ifdef CONFIG_USB_XHCI_OWL
+	/* added by Actions */
+	enable_bias();
+#endif
+
 	/* Halting the Host first */
 	debug("// Halt the HC\n");
 	state = xhci_readl(&hcor->or_usbsts) & STS_HALT;
@@ -209,7 +218,14 @@ int xhci_reset(struct xhci_hcor *hcor)
 	 * xHCI cannot write to any doorbells or operational registers other
 	 * than status until the "Controller Not Ready" flag is cleared.
 	 */
-	return handshake(&hcor->or_usbsts, STS_CNR, 0, XHCI_MAX_RESET_USEC);
+	ret = handshake(&hcor->or_usbsts, STS_CNR, 0, XHCI_MAX_RESET_USEC);
+
+#ifdef CONFIG_USB_XHCI_OWL
+	/* added by Actions */
+	dwc3_phy_init(1,0);
+	disable_bias();
+#endif
+	return ret;
 }
 
 /**
