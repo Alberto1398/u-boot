@@ -61,3 +61,5 @@ config CONFIG_FSL_SEC_MON
 	  system states.
 	  Security Monitor can be transitioned on any security failures,
 	  like software violations or hardware security violations.
+
+source "drivers/misc/misc-info/Kconfig"
