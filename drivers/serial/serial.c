@@ -156,6 +156,8 @@ serial_initfunc(sconsole_serial_initialize);
 serial_initfunc(sh_serial_initialize);
 serial_initfunc(uartlite_serial_initialize);
 serial_initfunc(zynq_serial_initialize);
+serial_initfunc(owl_serial_initialize);
+
 
 /**
  * serial_register() - Register serial driver with serial driver core
@@ -248,6 +250,7 @@ void serial_initialize(void)
 	sh_serial_initialize();
 	uartlite_serial_initialize();
 	zynq_serial_initialize();
+	owl_serial_initialize();
 
 	serial_assign(default_serial_console()->name);
 }
