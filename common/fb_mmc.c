@@ -16,6 +16,8 @@
 #define CONFIG_FASTBOOT_GPT_NAME GPT_ENTRY_NAME
 #endif
 
+#define BOOTLOADER_NAME "BOOTLOADER"
+#define UBOOT_NAME      "UBOOT"
 /* The 64 defined bytes plus the '\0' */
 #define RESPONSE_LEN	(64 + 1)
 
@@ -81,6 +83,15 @@ void fb_mmc_flash_write(const char *cmd, void *download_buffer,
 		return;
 	}
 
+	if (strcmp(cmd, BOOTLOADER_NAME) == 0){
+		info.blksz = 512;
+		info.start = CONFIG_BOOTLOADER_ADDR;
+		info.size = 2048;
+	}else if(strcmp(cmd, UBOOT_NAME) == 0){
+		info.blksz = 512;
+		info.start = CONFIG_UBOOT_ADDR;
+		info.size = 2048;
+	} else {
 	if (strcmp(cmd, CONFIG_FASTBOOT_GPT_NAME) == 0) {
 		printf("%s: updating MBR, Primary and Backup GPT(s)\n",
 		       __func__);
@@ -102,6 +113,7 @@ void fb_mmc_flash_write(const char *cmd, void *download_buffer,
 		error("cannot find partition: '%s'\n", cmd);
 		fastboot_fail("cannot find partition");
 		return;
+		}
 	}
 
 	if (is_sparse_image(download_buffer))

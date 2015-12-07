@@ -24,6 +24,7 @@
 #include <linux/compiler.h>
 #include <bootm.h>
 #include <vxworks.h>
+#include <power/boot_power.h>
 
 #if defined(CONFIG_ARMV7_NONSEC) || defined(CONFIG_ARMV7_VIRT)
 #include <asm/armv7.h>
@@ -328,6 +329,13 @@ int do_bootm_linux(int flag, int argc, char * const argv[],
 	/* No need for those on ARM */
 	if (flag & BOOTM_STATE_OS_BD_T || flag & BOOTM_STATE_OS_CMDLINE)
 		return -1;
+		
+	if (gd->flags & GD_FLG_LOWPOWER){
+		printf("power low, shut down the power now!\n");
+		mdelay(3000);
+		atc260x_shutoff();	
+		return -1;
+	}
 
 	if (flag & BOOTM_STATE_OS_PREP) {
 		boot_prep_linux(images);

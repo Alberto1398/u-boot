@@ -61,6 +61,18 @@ config SEMIHOSTING
 choice
 	prompt "Target select"
 
+config TARGET_S500
+	bool "Support S500"
+	select CPU_V7
+
+config TARGET_S500_UPGRADE
+	bool "Support S500 Upgrade"
+	select CPU_V7
+	
+config TARGET_ATM7059
+	bool "Support ATM7059 borad"
+	select CPU_V7
+
 config TARGET_INTEGRATORAP_CM720T
 	bool "Support integratorap_cm720t"
 	select CPU_ARM720T
@@ -775,6 +787,7 @@ source "arch/arm/cpu/armv8/Kconfig"
 
 source "arch/arm/imx-common/Kconfig"
 
+source "board/actions/owl/Kconfig"
 source "board/aristainetos/Kconfig"
 source "board/BuR/kwb/Kconfig"
 source "board/BuR/tseries/Kconfig"

@@ -58,6 +58,12 @@
 #ifdef CONFIG_AVR32
 #include <asm/arch/mmu.h>
 #endif
+#include <asm/arch/pmu.h>
+#include <asm/arch/owl_afi.h>
+#include <asm/arch/sys_proto.h>
+#include <power/boot_power.h>
+#include <key_scan.h>
+
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -91,6 +97,38 @@ static int initr_secondary_cpu(void)
 	return 0;
 }
 
+static int check_boot_flag(void)
+{
+	printf("bootmode = %d\n" ,owl_get_boot_mode());
+	if ( owl_get_boot_mode() != BOOT_MODE_PRODUCE ) {		
+		if(owl_get_boot_dev() == OWL_BOOTDEV_NAND) {
+			setenv("bootcmd", "run nandboot");
+			setenv("devif", "nand");
+			printf("nand boot\n");
+		} else if(owl_get_boot_dev() == OWL_BOOTDEV_SD2){
+			setenv("bootcmd", "run emmcboot");
+			setenv("devif", "mmc");
+			printf("emmc boot\n");
+		} else {
+			setenv("bootcmd", "run mmcboot");
+			setenv("devif", "mmc");	
+			printf("sd boot\n");
+		}
+	} else {
+		setenv("bootcmd", "run ramboot");
+		setenv("bootdelay", "0");
+		printf("produce boot\n");
+	}
+	
+	return 0;
+}
+
+static int check_recovery(void)
+{
+	check_recovery_mode();
+	return 0;
+}
+
 static int initr_trace(void)
 {
 #ifdef CONFIG_TRACE
@@ -117,7 +155,8 @@ static int initr_reloc(void)
 static int initr_caches(void)
 {
 	/* Enable caches */
-	enable_caches();
+	//enable_caches();
+	dcache_enable();
 	return 0;
 }
 #endif
@@ -291,8 +330,13 @@ static int initr_dm(void)
 
 __weak int power_init_board(void)
 {
+	if(owl_get_boot_mode() != BOOT_MODE_PRODUCE){
+		printf("begin to check power!\n");
+		check_power();
+	}
 	return 0;
 }
+
 
 static int initr_announce(void)
 {
@@ -713,6 +757,8 @@ init_fnc_t init_sequence_r[] = {
 #ifdef CONFIG_DM
 	initr_dm,
 #endif
+initr_serial,
+
 #ifdef CONFIG_ARM
 	board_init,	/* Setup chipselects */
 #endif
@@ -726,7 +772,7 @@ init_fnc_t init_sequence_r[] = {
 	set_cpu_clk_info, /* Setup clock information */
 #endif
 	stdio_init_tables,
-	initr_serial,
+	
 	initr_announce,
 	INIT_FUNC_WATCHDOG_RESET
 #ifdef CONFIG_NEEDS_MANUAL_RELOC
@@ -798,6 +844,10 @@ init_fnc_t init_sequence_r[] = {
 #endif
 	INIT_FUNC_WATCHDOG_RESET
 	initr_secondary_cpu,
+    check_boot_flag,
+#ifdef CONFIG_ANDROID_RECOVERY
+	check_recovery,
+#endif
 #ifdef CONFIG_SC3
 	initr_sc3_read_eeprom,
 #endif
@@ -811,7 +861,13 @@ init_fnc_t init_sequence_r[] = {
 	 */
 	initr_pci,
 #endif
+#ifdef CONFIG_VIDEO_BMP_LOGO
+	splash_image_init,
+#endif	
 	stdio_add_devices,
+#ifdef CONFIG_VIDEO_BMP_LOGO
+	owl_dss_enable,
+#endif
 	initr_jumptable,
 #ifdef CONFIG_API
 	initr_api,
@@ -837,6 +893,9 @@ init_fnc_t init_sequence_r[] = {
 #if defined(CONFIG_X86) || defined(CONFIG_MICROBLAZE) || defined(CONFIG_AVR32) \
 	|| defined(CONFIG_M68K)
 	timer_init,		/* initialize timer */
+#endif
+#ifdef CONFIG_CHECK_KEY
+    check_key,
 #endif
 #if defined(CONFIG_STATUS_LED) && defined(STATUS_LED_BOOT)
 	initr_status_led,
@@ -912,7 +971,7 @@ void board_init_r(gd_t *new_gd, ulong dest_addr)
 	for (i = 0; i < ARRAY_SIZE(init_sequence_r); i++)
 		init_sequence_r[i] += gd->reloc_off;
 #endif
-
+	serial_init();
 	if (initcall_run_list(init_sequence_r))
 		hang();
 

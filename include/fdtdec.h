@@ -169,8 +169,20 @@ enum fdt_compat_id {
 	COMPAT_INTEL_ICH_SPI,		/* Intel ICH7/9 SPI controller */
 	COMPAT_INTEL_QRK_MRC,		/* Intel Quark MRC */
 	COMPAT_SOCIONEXT_XHCI,		/* Socionext UniPhier xHCI */
-
-	COMPAT_COUNT,
+	COMPAT_ACTIONS_OWL_I2C,
+	COMPAT_ACTIONS_OWL_PINCTRL,	/* owl pinctrl */
+	COMPAT_ACTIONS_OWL_PWM,	/*Actions PWM controller*/
+	COMPAT_ACTIONS_OWL_SDMMC,	/* Actions SDMMC controller */
+	COMPAT_ACTIONS_OWL_GPIO,	/*Actions GPIO driver*/
+	COMPAT_ACTIONS_OWL_FRAMEBUFFER,	/*Actions framebuffer*/
+	COMPAT_ACTIONS_OWL_LCD,	/* Actions LCD controller */
+	COMPAT_ACTIONS_OWL_PWM_BACKLIGHT,	/*Actions PWM backlight driver*/
+	COMPAT_ACTIONS_OWL_DSI,	/* Actions DSI controller */
+	COMPAT_ACTIONS_OWL_HDMI,	/* Actions HDMI controller */	
+	COMPAT_ACTIONS_OWL_CVBS,	/* Actions CVBS controller */	
+	COMPAT_ACTIONS_OWL_USB3_MONITOR,	/*Actions USB3 monitor driver*/
+	COMPAT_ACTIONS_OWL_PMU,	/*Actions OWL PMU driver*/
+	COMPAT_COUNT,	
 };
 
 #define MAX_PHANDLE_ARGS 16

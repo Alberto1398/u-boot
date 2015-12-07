@@ -116,4 +116,10 @@ typedef struct global_data {
 #define GD_FLG_SERIAL_READY	0x00100	/* Pre-reloc serial console ready  */
 #define GD_FLG_FULL_MALLOC_INIT	0x00200	/* Full malloc() is ready	   */
 
+/*actions add*/
+#define GD_FLG_RECOVERY		0x10000	/* enter recovery*/
+#define GD_FLG_CMDLINE		0x20000	/* enter uboot cmdline*/
+#define GD_FLG_CHARGER      0x40000 /* enter charger  */
+#define GD_FLG_LOWPOWER     0x80000 /* low power */
+#define GD_FLG_BL_LOWPOWER  0x01000 /* low backlight power */
 #endif /* __ASM_GENERIC_GBL_DATA_H */

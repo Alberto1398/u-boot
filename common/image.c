@@ -31,6 +31,10 @@
 #if defined(CONFIG_FIT) || defined(CONFIG_OF_LIBFDT)
 #include <libfdt.h>
 #include <fdt_support.h>
+#ifdef CONFIG_OWL
+#include <asm/arch/owl_boot_fdt.h>
+#endif
+
 #endif
 
 #include <u-boot/md5.h>
@@ -1280,6 +1284,10 @@ int image_setup_linux(bootm_headers_t *images)
 			return ret;
 	}
 
+	#ifdef CONFIG_OWL
+	owl_boot_fdt_setup(images->ft_addr);
+	#endif
+	
 	return 0;
 }
 #endif /* CONFIG_LMB */

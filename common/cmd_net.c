@@ -12,6 +12,8 @@
 #include <command.h>
 #include <net.h>
 
+DECLARE_GLOBAL_DATA_PTR;
+
 static int netboot_common(enum proto_t, cmd_tbl_t *, int, char * const []);
 
 static int do_bootp(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
@@ -40,6 +42,32 @@ U_BOOT_CMD(
 	"boot image via network using TFTP protocol",
 	"[loadAddress] [[hostIPaddr:]bootfilename]"
 );
+
+int  do_usbnet(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+	int ret = 0;
+	int val = 0;
+
+	if (argc < 2)
+		return CMD_RET_USAGE;
+
+	val = simple_strtoul(argv[1], NULL, 16);
+	if (val == 0)
+		eth_halt();
+	else {
+		eth_halt();
+		eth_set_current();
+		ret = eth_init(gd->bd);
+	}
+	return ret;
+}
+
+U_BOOT_CMD(
+	usbnet,	2,	1,	do_usbnet,
+	"enable or disable usbnet",
+	"1:enable;0:disable"
+);
+
 
 #ifdef CONFIG_CMD_TFTPPUT
 int do_tftpput(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])

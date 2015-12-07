@@ -868,9 +868,16 @@ ifndef CONFIG_SYS_UBOOT_START
 CONFIG_SYS_UBOOT_START := 0
 endif
 
+ifneq ($(CONFIG_OWL),)
+MKIMAGEFLAGS_u-boot.img = -A $(ARCH) -T firmware -C none -O u-boot \
+	-a $(CONFIG_SYS_LOAD_ADDR) -e $(CONFIG_SYS_TEXT_BASE) \
+	-n "U-Boot $(UBOOTRELEASE) for $(BOARD) board"
+else
 MKIMAGEFLAGS_u-boot.img = -A $(ARCH) -T firmware -C none -O u-boot \
 	-a $(CONFIG_SYS_TEXT_BASE) -e $(CONFIG_SYS_UBOOT_START) \
 	-n "U-Boot $(UBOOTRELEASE) for $(BOARD) board"
+endif
+	
 
 MKIMAGEFLAGS_u-boot.kwb = -n $(srctree)/$(CONFIG_SYS_KWD_CONFIG:"%"=%) \
 	-T kwbimage -a $(CONFIG_SYS_TEXT_BASE) -e $(CONFIG_SYS_TEXT_BASE)

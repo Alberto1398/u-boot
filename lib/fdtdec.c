@@ -77,6 +77,19 @@ static const char * const compat_names[COMPAT_COUNT] = {
 	COMPAT(INTEL_ICH_SPI, "intel,ich-spi"),
 	COMPAT(INTEL_QRK_MRC, "intel,quark-mrc"),
 	COMPAT(SOCIONEXT_XHCI, "socionext,uniphier-xhci"),
+	COMPAT(ACTIONS_OWL_I2C, "actions,owl-i2c"),
+	COMPAT(ACTIONS_OWL_PINCTRL, "actions,atm7059a-pinctrl"),
+	COMPAT(ACTIONS_OWL_PWM, "actions,atm7059a-pwm"),
+	COMPAT(ACTIONS_OWL_SDMMC, "actions,owl-mmc"),
+	COMPAT(ACTIONS_OWL_GPIO, "actions,atm7059a-gpio"),
+	COMPAT(ACTIONS_OWL_FRAMEBUFFER, "actions,framebuffer"),
+	COMPAT(ACTIONS_OWL_LCD, "actions,owl-lcd"),
+	COMPAT(ACTIONS_OWL_PWM_BACKLIGHT, "actions,owl-pwm-backlight"),
+	COMPAT(ACTIONS_OWL_DSI, "actions,owl-dsi"),
+	COMPAT(ACTIONS_OWL_HDMI, "actions,atm7059a-hdmi"),
+	COMPAT(ACTIONS_OWL_CVBS, "actions,atm7059a-cvbs"),	
+	COMPAT(ACTIONS_OWL_USB3_MONITOR, "actions,atm7059tc-usbmonitor"),
+	COMPAT(ACTIONS_OWL_PMU, "actions,atm7059tc-pmu"),
 };
 
 const char *fdtdec_get_compatible(enum fdt_compat_id id)
