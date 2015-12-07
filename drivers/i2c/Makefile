@@ -36,3 +36,4 @@ obj-$(CONFIG_SYS_I2C_TEGRA) += tegra_i2c.o
 obj-$(CONFIG_SYS_I2C_UNIPHIER) += i2c-uniphier.o
 obj-$(CONFIG_SYS_I2C_UNIPHIER_F) += i2c-uniphier-f.o
 obj-$(CONFIG_SYS_I2C_ZYNQ) += zynq_i2c.o
+obj-$(CONFIG_SYS_I2C_OWL) += owl_i2c.o
