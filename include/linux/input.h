@@ -152,4 +152,6 @@
 #define KEY_COMPOSE		127
 #define KEY_FN			0x1d0
 
+#define KEY_MENU		139	/* Menu (show menu) */
+
 #endif

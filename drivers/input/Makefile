@@ -14,3 +14,4 @@ obj-$(CONFIG_PS2MULT) += ps2mult.o ps2ser.o
 endif
 obj-y += input.o
 obj-$(CONFIG_OF_CONTROL) += key_matrix.o
+obj-$(CONFIG_CHECK_KEY) += key_scan.o
