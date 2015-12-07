@@ -229,7 +229,7 @@ static int mmc_read_blocks(struct mmc *mmc, void *dst, lbaint_t start,
 	return blkcnt;
 }
 
-static ulong mmc_bread(int dev_num, lbaint_t start, lbaint_t blkcnt, void *dst)
+ ulong mmc_bread(int dev_num, lbaint_t start, lbaint_t blkcnt, void *dst)
 {
 	lbaint_t cur, blocks_todo = blkcnt;
 
@@ -375,6 +375,7 @@ static int mmc_send_op_cond_iter(struct mmc *mmc, struct mmc_cmd *cmd,
 	return 0;
 }
 
+#define TIME 1000
 static int mmc_send_op_cond(struct mmc *mmc)
 {
 	struct mmc_cmd cmd;
@@ -384,16 +385,29 @@ static int mmc_send_op_cond(struct mmc *mmc)
 	mmc_go_idle(mmc);
 
  	/* Asking to the card its capabilities */
-	mmc->op_cond_pending = 1;
-	for (i = 0; i < 2; i++) {
+	mmc->op_cond_pending = 0;
+	for (i = 0; i < TIME; i++) {
 		err = mmc_send_op_cond_iter(mmc, &cmd, i != 0);
 		if (err)
 			return err;
 
 		/* exit if not busy (flag seems to be inverted) */
 		if (mmc->op_cond_response & OCR_BUSY)
-			return 0;
+			 break;
+		
+		udelay(1000);
 	}
+
+	if(i == TIME){
+		printf("%s:try cmd1 timeout\n",__FUNCTION__);
+		return TIMEOUT;
+	}	
+
+	mmc->version = MMC_VERSION_UNKNOWN;
+	mmc->ocr = cmd.response[0];
+
+	mmc->high_capacity = ((mmc->ocr & OCR_HCS) == OCR_HCS);
+	mmc->rca = 1;
 	return IN_PROGRESS;
 }
 

@@ -289,6 +289,8 @@ struct mmc_data {
 		char *dest;
 		const char *src; /* src buffers don't get written to */
 	};
+	char *alin_buf;
+	char *temp_aline_buf;	
 	uint flags;
 	uint blocks;
 	uint blocksize;
@@ -456,6 +458,8 @@ void board_mmc_power_init(void);
 int board_mmc_init(bd_t *bis);
 int cpu_mmc_init(bd_t *bis);
 int mmc_get_env_addr(struct mmc *mmc, int copy, u32 *env_addr);
+ulong mmc_bread(int dev_num, lbaint_t start, lbaint_t blkcnt, void *dst);
+ulong mmc_bwrite(int dev_num, lbaint_t start, lbaint_t blkcnt, const void *src);
 
 struct pci_device_id;
 
