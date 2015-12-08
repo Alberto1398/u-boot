@@ -549,7 +549,7 @@ s32 hdmi_set_tvoutpll_by_pixclk(int vid, int deep_color, int _3d)
         if (_3d == _3D) { 
             writel(0x00030008, CMU_TVOUTPLL); 
             writel(0x81982986, HDMI_TX_1);
-            writel(0x18f80f87, HDMI_TX_2);
+            writel(0x18f80f89, HDMI_TX_2);
             
         } else {
             if (deep_color == DEEP_COLOR_24_BIT) {
@@ -560,7 +560,7 @@ s32 hdmi_set_tvoutpll_by_pixclk(int vid, int deep_color, int _3d)
                 writel(0x00210008, CMU_TVOUTPLL);
             }
             writel(0x819c2986, HDMI_TX_1);
-            writel(0x18f80f87, HDMI_TX_2);          
+            writel(0x18f80f89, HDMI_TX_2);          
         }
         break;
     case OWL_TV_MOD_720P_60HZ: 
@@ -569,21 +569,21 @@ s32 hdmi_set_tvoutpll_by_pixclk(int vid, int deep_color, int _3d)
         if (_3d == _3D) { 
             writel(0x00060008, CMU_TVOUTPLL);
             writel(0x81902986, HDMI_TX_1);
-            writel(0x18f80f87, HDMI_TX_2);
+            writel(0x18f80f89, HDMI_TX_2);
             
         } else {
             if (deep_color == DEEP_COLOR_24_BIT) {
                 writel(0x00040008, CMU_TVOUTPLL); 
                 writel(0x81942986, HDMI_TX_1);
-                writel(0x18f80f87, HDMI_TX_2);
+                writel(0x18f80f89, HDMI_TX_2);
             } else if (deep_color == DEEP_COLOR_30_BIT) {
                 writel(0x00140008, CMU_TVOUTPLL);
                 writel(0x81942986, HDMI_TX_1);
-                writel(0x18f80f87, HDMI_TX_2);
+                writel(0x18f80f89, HDMI_TX_2);
             }else if (deep_color == DEEP_COLOR_36_BIT) {
                 writel(0x00240008, CMU_TVOUTPLL);
                 writel(0x81942986, HDMI_TX_1);
-                writel(0x18f80f87, HDMI_TX_2);
+                writel(0x18f80f89, HDMI_TX_2);
             }
             
         }
@@ -600,7 +600,7 @@ s32 hdmi_set_tvoutpll_by_pixclk(int vid, int deep_color, int _3d)
             if (deep_color == DEEP_COLOR_24_BIT) {
                 writel(0x00060008, CMU_TVOUTPLL);
                 writel(0x81902986, HDMI_TX_1);
-                writel(0x18f80f87, HDMI_TX_2);
+                writel(0x18f80f89, HDMI_TX_2);
             } else if (deep_color == DEEP_COLOR_30_BIT) {
                 writel(0x00160008, CMU_TVOUTPLL);
                 writel(0xa2b0285a, HDMI_TX_1);
@@ -621,18 +621,18 @@ s32 hdmi_set_tvoutpll_by_pixclk(int vid, int deep_color, int _3d)
         } else if (deep_color == DEEP_COLOR_30_BIT) {
             writel(0x00160008, CMU_TVOUTPLL);
             writel(0x81900986, HDMI_TX_1);
-            writel(0x18f80087, HDMI_TX_2);
+            writel(0x18f80089, HDMI_TX_2);
         } else if (deep_color == DEEP_COLOR_36_BIT) {
             writel(0x00260008, CMU_TVOUTPLL);
             writel(0x81900986, HDMI_TX_1);
-            writel(0x18f80087, HDMI_TX_2);
+            writel(0x18f80089, HDMI_TX_2);
         }
         break;        
     default:
             
         writel(0x00040008, CMU_TVOUTPLL); 
         writel(0x81982986, HDMI_TX_1);
-        writel(0x18f80087, HDMI_TX_2);
+        writel(0x18f80089, HDMI_TX_2);
             
             
         break;
