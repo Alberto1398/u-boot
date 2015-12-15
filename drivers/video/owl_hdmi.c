@@ -540,50 +540,35 @@ void *hdmi_get_mode(struct hdmi_video_settings *settings)
  *     00:*1   01:*1.25 02:*1.5
  *
  * ***************************************************************/
-s32 hdmi_set_tvoutpll_by_pixclk(int vid, int deep_color, int _3d)
+s32 hdmi_set_clk(int vid, int deep_color, int _3d)
 {
     
     switch (vid) {      
     case OWL_TV_MOD_576P:
     case OWL_TV_MOD_480P :  
-        if (_3d == _3D) { 
-            writel(0x00030008, CMU_TVOUTPLL); 
-            writel(0x81982986, HDMI_TX_1);
-            writel(0x18f80f89, HDMI_TX_2);
-            
-        } else {
+        if (_3d == _3D) {            
+            writel(0x00030008, CMU_TVOUTPLL);            
+        } else {                     
             if (deep_color == DEEP_COLOR_24_BIT) {
                 writel(0x00010008, CMU_TVOUTPLL);
             } else if (deep_color == DEEP_COLOR_30_BIT) {
                 writel(0x00110008, CMU_TVOUTPLL);
             }else if (deep_color == DEEP_COLOR_36_BIT) {
                 writel(0x00210008, CMU_TVOUTPLL);
-            }
-            writel(0x819c2986, HDMI_TX_1);
-            writel(0x18f80f89, HDMI_TX_2);          
+            }                      
         }
         break;
     case OWL_TV_MOD_720P_60HZ: 
     case OWL_TV_MOD_720P_50HZ:
-    case OWL_TV_MOD_DVI:
-        if (_3d == _3D) { 
-            writel(0x00060008, CMU_TVOUTPLL);
-            writel(0x81902986, HDMI_TX_1);
-            writel(0x18f80f89, HDMI_TX_2);
-            
+        if (_3d == _3D) {           
+            writel(0x00060008, CMU_TVOUTPLL);            
         } else {
             if (deep_color == DEEP_COLOR_24_BIT) {
                 writel(0x00040008, CMU_TVOUTPLL); 
-                writel(0x81942986, HDMI_TX_1);
-                writel(0x18f80f89, HDMI_TX_2);
             } else if (deep_color == DEEP_COLOR_30_BIT) {
                 writel(0x00140008, CMU_TVOUTPLL);
-                writel(0x81942986, HDMI_TX_1);
-                writel(0x18f80f89, HDMI_TX_2);
             }else if (deep_color == DEEP_COLOR_36_BIT) {
                 writel(0x00240008, CMU_TVOUTPLL);
-                writel(0x81942986, HDMI_TX_1);
-                writel(0x18f80f89, HDMI_TX_2);
             }
             
         }
@@ -592,52 +577,113 @@ s32 hdmi_set_tvoutpll_by_pixclk(int vid, int deep_color, int _3d)
     case OWL_TV_MOD_1080P_60HZ://need check
     case OWL_TV_MOD_1080P_50HZ:
         if (_3d == _3D) { 
-            writel(0x00070008, CMU_TVOUTPLL); 
-            writel(0xa2b0285a, HDMI_TX_1);
-            writel(0x18fa0f39, HDMI_TX_2);
-            
+            writel(0x00070008, CMU_TVOUTPLL);            
         } else {
             if (deep_color == DEEP_COLOR_24_BIT) {
                 writel(0x00060008, CMU_TVOUTPLL);
-                writel(0x81902986, HDMI_TX_1);
-                writel(0x18f80f89, HDMI_TX_2);
             } else if (deep_color == DEEP_COLOR_30_BIT) {
                 writel(0x00160008, CMU_TVOUTPLL);
-                writel(0xa2b0285a, HDMI_TX_1);
-                writel(0x18fa0f39, HDMI_TX_2);
             }else if (deep_color == DEEP_COLOR_36_BIT) {
                 writel(0x00260008, CMU_TVOUTPLL);
-                writel(0xa2b0285a, HDMI_TX_1);
-                writel(0x18fa0f39, HDMI_TX_2);
+            }            
+        }
+        break;      
+    case OWL_TV_MOD_4K_30HZ:
+        if (deep_color == DEEP_COLOR_24_BIT) {
+            writel(0x00070008, CMU_TVOUTPLL);
+        } else if (deep_color == DEEP_COLOR_30_BIT) {
+            writel(0x00160008, CMU_TVOUTPLL);
+        } else if (deep_color == DEEP_COLOR_36_BIT) {
+            writel(0x00260008, CMU_TVOUTPLL);
+        }
+        break;        
+    default:           
+        writel(0x00040008, CMU_TVOUTPLL);            
+        break;
+    }
+    // enable 24M HZ 
+    act_setl(1<<23, CMU_TVOUTPLL); 
+}
+
+void hdmi_phy_enable()
+{
+	writel((readl(HDMI_TX_2) | 0x00020f00), HDMI_TX_2);
+}
+
+s32 hdmi_set_tdms_ldo(int vid, int deep_color, int _3d)
+{
+	int hdmi_tx_1_value = 0;
+	int hdmi_tx_2_value = 0;   
+    switch (vid) {      
+    case OWL_TV_MOD_576P:
+    case OWL_TV_MOD_480P :  
+        if (_3d == _3D) {
+        	hdmi_tx_1_value =  0x81982986; 
+        	hdmi_tx_2_value =  0x18f80f89;               
+        } else {
+            hdmi_tx_1_value =  0x819c2986; 
+        	hdmi_tx_2_value =  0x18f80f89;                   
+        }
+        break;
+    case OWL_TV_MOD_720P_60HZ: 
+    case OWL_TV_MOD_720P_50HZ:
+        if (_3d == _3D) {            
+            hdmi_tx_1_value =  0x81902986; 
+        	hdmi_tx_2_value =  0x18f80f89;             
+        } else {
+            if (deep_color == DEEP_COLOR_24_BIT) {
+                hdmi_tx_1_value =  0x81942986; 
+        		hdmi_tx_2_value =  0x18f80f89;   
+            } else if (deep_color == DEEP_COLOR_30_BIT) {
+                hdmi_tx_1_value =  0x81942986; 
+        		hdmi_tx_2_value =  0x18f80f89;  
+            }else if (deep_color == DEEP_COLOR_36_BIT) {
+                hdmi_tx_1_value =  0x81942986; 
+        		hdmi_tx_2_value =  0x18f80f89;  
+            }
+            
+        }
+        break;
+
+    case OWL_TV_MOD_1080P_60HZ://need check
+    case OWL_TV_MOD_1080P_50HZ:
+        if (_3d == _3D) { 
+            hdmi_tx_1_value =  0xa2b0285a; 
+        	hdmi_tx_2_value =  0x18fa0f39;              
+        } else {
+            if (deep_color == DEEP_COLOR_24_BIT) {
+                hdmi_tx_1_value =  0x81902986; 
+        		hdmi_tx_2_value =  0x18f80f89;  
+            } else if (deep_color == DEEP_COLOR_30_BIT) {
+                hdmi_tx_1_value =  0xa2b0285a; 
+        		hdmi_tx_2_value =  0x18fa0f39;  
+            }else if (deep_color == DEEP_COLOR_36_BIT) {
+                hdmi_tx_1_value =  0xa2b0285a; 
+        		hdmi_tx_2_value =  0x18fa0f39;  
             }
             
         }
         break;      
     case OWL_TV_MOD_4K_30HZ:
         if (deep_color == DEEP_COLOR_24_BIT) {
-            writel(0x00070008, CMU_TVOUTPLL);
-            writel(0xa2b0285a, HDMI_TX_1);
-            writel(0x18fa0f39, HDMI_TX_2);
+            hdmi_tx_1_value =  0xa2b0285a; 
+        	hdmi_tx_2_value =  0x18fa0f39;   
         } else if (deep_color == DEEP_COLOR_30_BIT) {
-            writel(0x00160008, CMU_TVOUTPLL);
-            writel(0x81900986, HDMI_TX_1);
-            writel(0x18f80089, HDMI_TX_2);
+            hdmi_tx_1_value =  0x81900986; 
+        	hdmi_tx_2_value =  0x18f80089;   
         } else if (deep_color == DEEP_COLOR_36_BIT) {
-            writel(0x00260008, CMU_TVOUTPLL);
-            writel(0x81900986, HDMI_TX_1);
-            writel(0x18f80089, HDMI_TX_2);
+            hdmi_tx_1_value =  0x81900986; 
+        	hdmi_tx_2_value =  0x18f80089;   
         }
         break;        
     default:
-            
-        writel(0x00040008, CMU_TVOUTPLL); 
-        writel(0x81982986, HDMI_TX_1);
-        writel(0x18f80089, HDMI_TX_2);
-            
-            
+        hdmi_tx_1_value =  0x81982986; 
+        hdmi_tx_2_value =  0x18f80089;              
         break;
-    }
-    act_setl(1<<23, CMU_TVOUTPLL); 
+    }   
+    writel((hdmi_tx_2_value & 0xfffdf0ff), HDMI_TX_2);
+    udelay(500);
+    writel(hdmi_tx_1_value, HDMI_TX_1);
 }
 
 int hdmi_set_outmode(struct hdmi_video_settings *settings)
@@ -1069,12 +1115,13 @@ void hdmi_audioch_cfg(struct hdmi_audio_settings *a_general)
 
 
 /*---------------------video_interface---------------------*/
-void hdmi_video_timing_cfg(struct hdmi_video_settings *settings)
+void hdmi_ldo_and_pll_cfg(struct hdmi_video_settings *settings)
 {
     int _3d = settings->_3d;
     int deep_color = settings->deep_color;
     int vid = settings->vid;
-    hdmi_set_tvoutpll_by_pixclk(vid ,deep_color, _3d);
+    hdmi_set_tdms_ldo(vid ,deep_color, _3d);
+    hdmi_set_clk(vid ,deep_color, _3d);
     HDMI_DRV_PRINT("[%s finished]\n", __func__);
 }
 
@@ -1197,7 +1244,7 @@ s32 hdmi_video_cfg(struct hdmi_video_settings *settings)
 {
     s32 ret;
     
-    hdmi_video_timing_cfg(settings);
+    hdmi_ldo_and_pll_cfg(settings);
     
     ret = hdmi_video_general_cfg(settings);
     /*packet */
@@ -1213,6 +1260,8 @@ s32 hdmi_video_cfg(struct hdmi_video_settings *settings)
         act_setl(HDMI_ICR_VITD(0x809050) | HDMI_ICR_ENVITD, HDMI_ICR);
     else
         act_clearl(HDMI_ICR_ENVITD, HDMI_ICR);
+    
+    hdmi_phy_enable();
 
     return ret;
 }
