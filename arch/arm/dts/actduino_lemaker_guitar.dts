@@ -326,7 +326,8 @@ lcd0: lcd0@b02a0000 {
 		hdcp_onoff = <0>;
 		channel_invert = <0>;
 		bit_invert = <0>;
-		bootable = <1>; 
+		bootable = <1>;
+		i2cbus = <1>; 
 		bootrotate = <3>;   
 		default_resolution = "auto";
 	};
