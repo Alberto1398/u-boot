@@ -837,7 +837,7 @@ static int allocate_buf(struct fb_addr *buf, u32 size, u32 bytes_align)
     	{
     		memory_size = 768 * 1024 * 1024 ;
     	}
-    else if(memory_size > 512 * 1024 * 1024 && memory_size < 2048*1024*1024)
+    else if(memory_size > 512 * 1024 * 1024)
     	{
     		memory_size = 760 * 1024 * 1024 ;
     	} 
