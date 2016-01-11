@@ -618,27 +618,27 @@ s32 hdmi_set_tdms_ldo(int vid, int deep_color, int _3d)
     case OWL_TV_MOD_576P:
     case OWL_TV_MOD_480P :  
         if (_3d == _3D) {
-        	hdmi_tx_1_value =  0x81982986; 
+        	hdmi_tx_1_value =  0x81982983; 
         	hdmi_tx_2_value =  0x18f80f89;               
         } else {
-            hdmi_tx_1_value =  0x819c2986; 
+            hdmi_tx_1_value =  0x819c2983; 
         	hdmi_tx_2_value =  0x18f80f89;                   
         }
         break;
     case OWL_TV_MOD_720P_60HZ: 
     case OWL_TV_MOD_720P_50HZ:
         if (_3d == _3D) {            
-            hdmi_tx_1_value =  0x81902986; 
+            hdmi_tx_1_value =  0x81902983; 
         	hdmi_tx_2_value =  0x18f80f89;             
         } else {
             if (deep_color == DEEP_COLOR_24_BIT) {
-                hdmi_tx_1_value =  0x81942986; 
+                hdmi_tx_1_value =  0x81942983; 
         		hdmi_tx_2_value =  0x18f80f89;   
             } else if (deep_color == DEEP_COLOR_30_BIT) {
-                hdmi_tx_1_value =  0x81942986; 
+                hdmi_tx_1_value =  0x81942983; 
         		hdmi_tx_2_value =  0x18f80f89;  
             }else if (deep_color == DEEP_COLOR_36_BIT) {
-                hdmi_tx_1_value =  0x81942986; 
+                hdmi_tx_1_value =  0x81942983; 
         		hdmi_tx_2_value =  0x18f80f89;  
             }
             
@@ -652,7 +652,7 @@ s32 hdmi_set_tdms_ldo(int vid, int deep_color, int _3d)
         	hdmi_tx_2_value =  0x18fa0f39;              
         } else {
             if (deep_color == DEEP_COLOR_24_BIT) {
-                hdmi_tx_1_value =  0x81902986; 
+                hdmi_tx_1_value =  0x81902983; 
         		hdmi_tx_2_value =  0x18f80f89;  
             } else if (deep_color == DEEP_COLOR_30_BIT) {
                 hdmi_tx_1_value =  0xa2b0285a; 
@@ -669,15 +669,15 @@ s32 hdmi_set_tdms_ldo(int vid, int deep_color, int _3d)
             hdmi_tx_1_value =  0xa2b0285a; 
         	hdmi_tx_2_value =  0x18fa0f39;   
         } else if (deep_color == DEEP_COLOR_30_BIT) {
-            hdmi_tx_1_value =  0x81900986; 
+            hdmi_tx_1_value =  0x81900983; 
         	hdmi_tx_2_value =  0x18f80089;   
         } else if (deep_color == DEEP_COLOR_36_BIT) {
-            hdmi_tx_1_value =  0x81900986; 
+            hdmi_tx_1_value =  0x81900983; 
         	hdmi_tx_2_value =  0x18f80089;   
         }
         break;        
     default:
-        hdmi_tx_1_value =  0x81982986; 
+        hdmi_tx_1_value =  0x81982983; 
         hdmi_tx_2_value =  0x18f80089;              
         break;
     }   
