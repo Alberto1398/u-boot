@@ -40,6 +40,72 @@
 #include <malloc.h>
 #include <part.h>
 #include <sparse_format.h>
+#include <linux/sizes.h>
+
+#ifndef CONFIG_FILL_BUFF_SIZE
+#define CONFIG_FILL_BUFF_SIZE	SZ_4M
+#endif
+
+static int write_fill_multi_blks(block_dev_desc_t *dev_desc,
+		disk_partition_t *info,
+		lbaint_t *blk, lbaint_t blkcnt, uint32_t fill_val)
+{
+	int i, size;;
+	uint32_t *fill_buf;
+	lbaint_t blks, fill_cnt, written_blks = 0;
+
+	fill_cnt = CONFIG_FILL_BUFF_SIZE / info->blksz;
+	lbaint_t quot = blkcnt / fill_cnt;
+	lbaint_t remd = blkcnt % fill_cnt;
+
+	size = blkcnt > fill_cnt ? CONFIG_FILL_BUFF_SIZE : (blkcnt * info->blksz);
+
+	fill_buf = (uint32_t *) memalign(ARCH_DMA_MINALIGN,
+				ROUNDUP(size, ARCH_DMA_MINALIGN));
+
+	if (!fill_buf) {
+		fastboot_fail(
+			"Malloc failed for: CHUNK_TYPE_FILL");
+		return -1;
+	}
+
+	for (i = 0; i < (size / sizeof(fill_val)); i++)
+		fill_buf[i] = fill_val;
+
+	for (i = 0; i < quot; i++) {
+		blks = dev_desc->block_write(dev_desc->dev,
+					     *blk, fill_cnt, fill_buf);
+		if (blks != fill_cnt) {
+			printf(
+			    "%s: Write failed, block # " LBAFU "\n",
+			    __func__, blkcnt);
+			fastboot_fail("flash write failure");
+			goto end;
+		}
+		written_blks =+ blks;
+		*blk += blks;
+	}
+
+	if (remd == 0)
+		goto end;
+
+	blks = dev_desc->block_write(dev_desc->dev,
+				     *blk, remd, fill_buf);
+	if (blks != remd) {
+		printf(
+		    "%s: Write Reset failed, block # " LBAFU "\n",
+		    __func__, blkcnt);
+		fastboot_fail("flash write failure");
+		goto end;
+	}
+	written_blks =+ blks;
+	*blk += blks;
+
+end:
+	free(fill_buf);
+
+	return written_blks;
+}
 
 void write_sparse_image(block_dev_desc_t *dev_desc,
 		disk_partition_t *info, const char *part_name,
@@ -51,13 +117,10 @@ void write_sparse_image(block_dev_desc_t *dev_desc,
 	uint32_t bytes_written = 0;
 	unsigned int chunk;
 	unsigned int chunk_data_sz;
-	uint32_t *fill_buf = NULL;
 	uint32_t fill_val;
 	sparse_header_t *sparse_header;
 	chunk_header_t *chunk_header;
 	uint32_t total_blocks = 0;
-	int i;
-
 	/* Read and skip over sparse image header */
 	sparse_header = (sparse_header_t *) data;
 
@@ -162,23 +225,6 @@ void write_sparse_image(block_dev_desc_t *dev_desc,
 				return;
 			}
 
-			fill_buf = (uint32_t *)
-				   memalign(ARCH_DMA_MINALIGN,
-					    ROUNDUP(info->blksz,
-						    ARCH_DMA_MINALIGN));
-			if (!fill_buf)
-			{
-				fastboot_fail(
-					"Malloc failed for: CHUNK_TYPE_FILL");
-				return;
-			}
-
-			fill_val = *(uint32_t *)data;
-			data = (char *) data + sizeof(uint32_t);
-
-			for (i = 0; i < (info->blksz / sizeof(fill_val)); i++)
-				fill_buf[i] = fill_val;
-
 			if (blk + blkcnt > info->start + info->size) {
 				printf(
 				    "%s: Request would exceed partition size!\n",
@@ -188,23 +234,14 @@ void write_sparse_image(block_dev_desc_t *dev_desc,
 				return;
 			}
 
-			for (i = 0; i < blkcnt; i++) {
-				blks = dev_desc->block_write(dev_desc->dev,
-							     blk, 1, fill_buf);
-				if (blks != 1) {
-					printf(
-					    "%s: Write failed, block # " LBAFU "\n",
-					    __func__, blkcnt);
-					fastboot_fail("flash write failure");
-					free(fill_buf);
-					return;
-				}
-				blk++;
-			}
+			fill_val = *(uint32_t *)data;
+			data = (char *) data + sizeof(uint32_t);
+
+			write_fill_multi_blks(dev_desc, info, &blk, blkcnt, fill_val);
+
 			bytes_written += blkcnt * info->blksz;
 			total_blocks += chunk_data_sz / sparse_header->blk_sz;
 
-			free(fill_buf);
 			break;
 
 			case CHUNK_TYPE_DONT_CARE:
