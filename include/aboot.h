@@ -7,10 +7,17 @@
 #include <part.h>
 #include <sparse_format.h>
 
+#define MIN(x,y) (x < y ? x : y)
 #define ROUNDUP(x, y)	(((x) + ((y) - 1)) & ~((y) - 1))
 
 void fastboot_fail(const char *s);
 void fastboot_okay(const char *s);
+
+static inline int get_order(uint32_t size, uint32_t blksz)
+{
+	size--;
+	return fls(size / blksz);
+}
 
 static inline int is_sparse_image(void *buf)
 {

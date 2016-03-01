@@ -41,33 +41,45 @@
 #include <part.h>
 #include <sparse_format.h>
 #include <linux/sizes.h>
+#include <linux/kernel.h>
 
-#ifndef CONFIG_FILL_BUFF_SIZE
-#define CONFIG_FILL_BUFF_SIZE	SZ_4M
+#ifndef CONFIG_FILL_BUFF_MAX_SIZE
+#define CONFIG_FILL_BUFF_MAX_SIZE	SZ_4M
 #endif
 
 static int write_fill_multi_blks(block_dev_desc_t *dev_desc,
 		disk_partition_t *info,
 		lbaint_t *blk, lbaint_t blkcnt, uint32_t fill_val)
 {
-	int i, size;;
+	int i, size, order;
 	uint32_t *fill_buf;
 	lbaint_t blks, fill_cnt, written_blks = 0;
 
-	fill_cnt = CONFIG_FILL_BUFF_SIZE / info->blksz;
-	lbaint_t quot = blkcnt / fill_cnt;
-	lbaint_t remd = blkcnt % fill_cnt;
+	order = get_order(MIN(CONFIG_FILL_BUFF_MAX_SIZE, (blkcnt * info->blksz)),
+			info->blksz);
 
-	size = blkcnt > fill_cnt ? CONFIG_FILL_BUFF_SIZE : (blkcnt * info->blksz);
-
-	fill_buf = (uint32_t *) memalign(ARCH_DMA_MINALIGN,
+	while(order >= 0) {
+		size = info->blksz << order;
+		fill_buf = (uint32_t *) memalign(ARCH_DMA_MINALIGN,
 				ROUNDUP(size, ARCH_DMA_MINALIGN));
+		if (fill_buf)
+			break;
+
+		order--;
+	}
 
 	if (!fill_buf) {
 		fastboot_fail(
 			"Malloc failed for: CHUNK_TYPE_FILL");
 		return -1;
 	}
+
+	fill_cnt = 0x1 << order;
+	lbaint_t quot = blkcnt / fill_cnt;
+	lbaint_t remd = blkcnt % fill_cnt;
+
+	if (blkcnt < fill_cnt)
+		size = blkcnt * info->blksz;
 
 	for (i = 0; i < (size / sizeof(fill_val)); i++)
 		fill_buf[i] = fill_val;
@@ -237,7 +249,9 @@ void write_sparse_image(block_dev_desc_t *dev_desc,
 			fill_val = *(uint32_t *)data;
 			data = (char *) data + sizeof(uint32_t);
 
-			write_fill_multi_blks(dev_desc, info, &blk, blkcnt, fill_val);
+			if (write_fill_multi_blks(dev_desc, info, &blk,
+						blkcnt, fill_val) < 0)
+				return;
 
 			bytes_written += blkcnt * info->blksz;
 			total_blocks += chunk_data_sz / sparse_header->blk_sz;
