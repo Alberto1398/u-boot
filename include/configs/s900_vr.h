@@ -49,10 +49,11 @@
 #define CONFIG_MMC
 #define CONFIG_GENERIC_MMC
 #define CONFIG_OWL_MMC
-#define DUAL_EMMC
-#define SLOT0				0
-#define SLOT2				2
+#define SLOT0                                          0
+#define SLOT2                                          2
+#define SLOT3                                          3
 
+#define CONFIG_OWL_EMMC_RAID0
 
 /*CHARGER*/
 #define CONFIG_ATC260X_CHARGER

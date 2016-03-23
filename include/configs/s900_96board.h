@@ -47,8 +47,11 @@
 #define CONFIG_MMC					1
 #define CONFIG_GENERIC_MMC		1
 #define CONFIG_OWL_MMC			1
+#undef CONFIG_OWL_EMMC_RAID0
+
 #define SLOT0                                          0
 #define SLOT2                                          2
+#undef SLOT3
 
 /* GPT command */
 #define CONFIG_PARTITION_UUIDS

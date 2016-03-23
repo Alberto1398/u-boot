@@ -37,27 +37,13 @@
 #define DATA_TRANSFER_TIMEOUT		\
 							(3 * (100 * 1000))
 
-#define PHYMMC_BUF_SIZE (CONFIG_SYS_MMC_MAX_BLK_COUNT*256)
 #define MAX_MMC_NUM 4
-#define MAX_VIRMMC_NUM 2
-extern unsigned int g_mmc_id;
+#define FDI_EMMC_ID			0x14
+
 struct owl_mmc_host mmc_host[MAX_MMC_NUM];
-struct vir_mmc g_owl_vir_mmc[MAX_VIRMMC_NUM]={
-	{
-	.phy_mmca = NULL,
-	.phy_mmcb = NULL,
-	.dual_mmc_en = 0,
-	},
-	{
-	.phy_mmca = NULL,
-	.phy_mmcb = NULL,
-	.dual_mmc_en = 0,
-	}
-};
 
 void owl_dump_sdc(struct owl_mmc_host *host);
 void owl_dump_mfp(struct owl_mmc_host *host);
-static struct mmc_config *owl_virmmc_config_init(int id);
 
 void owl_dump_debug(struct mmc *mmc)
 {
@@ -166,7 +152,7 @@ static int owl_sd_clk_set_rate(enum sdctr_id id, unsigned long rate)
 			regv |= div;
 			writel(regv, CMU_SD0CLK);
 		} else {
-			printf("%s:%d:errid:%d:\n", __FUNCTION__, __LINE__,id);
+			printf("%s:%d: slot id:%d:\n", __FUNCTION__, __LINE__, id);
 			return -1;
 		}
 	}
@@ -459,9 +445,9 @@ static int owl_mmc_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd,
 	if (data) {
 		ret = owl_mmc_prepare_data(host, data);
 		/*set lbe to send clk after busy */
-		if(host->id == 2 || host->id == 3){
-			debug("emmc id:0x%x\n",g_mmc_id >> 24);
-			if( (g_mmc_id >> 24) != FDI_EMMC_ID){
+		if(host->id == 2 || host->id == 3) {
+			debug("cid[0]:0x%x\n", mmc->cid[0]);
+			if((mmc->cid[0] >> 24) != FDI_EMMC_ID) {
 				mode |= SD_CTL_LBE ;
 			}
 		}else{
@@ -688,178 +674,66 @@ static struct mmc_config *owl_mmc_config_init(int dev_index)
 
 }
 
-
-static struct mmc_config *owl_virmmc_config_init(int id)
-{
-
-	struct mmc_config *cfg = NULL;
-
-	cfg = malloc(sizeof(struct mmc_config));
-	if (cfg == NULL) {
-		printf("err:%s:%d:malloc owl_mmc_config fail\n",
-		       __FUNCTION__, __LINE__);
-		return NULL;
-	}
-	memset(cfg, 0, sizeof(struct mmc_config));
-
-	cfg->name = malloc(10);
-	if (cfg->name == NULL) {
-		printf("err:%s:%d:malloc owl_mmc_config->name fail\n",
-		       __FUNCTION__, __LINE__);
-		return NULL;
-	}
-	memset(cfg->name, 0, 10);
-
-	sprintf(cfg->name, "virmmc%d", id);
-
-
-	return cfg;
-
-}
-
 int owl_mmc_init(int dev_index)
 {
-	struct mmc *phymmc_sd = NULL;
-	struct mmc *phymmc_emmca = NULL;
 	struct mmc *mmc = NULL;
-	struct mmc_config *vircfg = NULL;
-	struct mmc_config *phycfga = NULL;
-	struct vir_mmc * vir_mmc = NULL;
-	#ifdef DUAL_EMMC
-	struct mmc_config *phycfgb = NULL;
-	struct mmc *phymmc_emmcb = NULL;
-	#endif
-	int virmmc_id;
+	struct mmc_config *cfg = NULL;
 	int ret = 0;
-
-	if(!(dev_index  == SLOT0 || dev_index  == SLOT2)  ){
-		printf("%s:err dev_index:%d\n",__FUNCTION__,__LINE__);
-		return -1;
-	}
 
 	ret = owl_host_init(dev_index, &mmc_host[dev_index]);
 	if (ret) {
 		printf("err:owl_host_init\n");
 		return -1;
 	}
-
-	phycfga = owl_mmc_config_init(dev_index);
-	if (!phycfga) {
+	cfg = owl_mmc_config_init(dev_index);
+	if (!cfg) {
 		printf("err:owl_mmc_config_init\n");
 		return -1;
 	}
-
-	if(dev_index){
-		virmmc_id = 0;
-	}else{
-		virmmc_id = 1;
-	}
-
-	vircfg = owl_virmmc_config_init(virmmc_id);
-	if (!vircfg) {
-		printf("err:owl_mmc_config_init\n");
+	mmc = mmc_create(cfg, &mmc_host[dev_index]);
+	if (!mmc) {
+		printf("err:mmc_create\n");
 		return -1;
 	}
-
-	if(dev_index  == SLOT2){
-
-#ifdef DUAL_EMMC
-		ret = owl_host_init((SLOT3), &mmc_host[SLOT3]);
-		if (ret) {
-			printf("err:host% dowl_host_init\n",(dev_index+1));
-			return -1;
-		}
-		phycfgb = owl_mmc_config_init(SLOT3);
-		if (!phycfgb) {
-			printf("err:owl_mmc_config_init\n");
-			return -1;
-		}
-#endif
-	}
-
-	if(dev_index == SLOT0){
-
-		phymmc_sd = mmc_create(phycfga, &mmc_host[dev_index]);
-		if (!phymmc_sd) {
-			printf("err:mmc_create phymmc_sd\n");
-			return -1;
-		}
-
-		mmc = mmc_vir_create(vircfg,&g_owl_vir_mmc[virmmc_id]);
-		if (!mmc) {
-			printf("err:mmc_vir_create\n");
-			return -1;
-		}
-
-		vir_mmc = (struct vir_mmc *)(mmc->priv);
-		vir_mmc->phy_mmca = phymmc_sd;
-		phymmc_sd->block_dev.dev = 0;
-		ret = mmc_init(phymmc_sd);
-
-		if (ret) {
-			printf("host%d scan err\n", dev_index);
+	ret = mmc_init(mmc);
+	if (ret) {
+		printf("host%d scan err\n", dev_index);
+		if (dev_index == SLOT0) {
 			printf("host0 checkout to uartpin\n");
 			pinmux_select(PERIPH_ID_SDMMC0, 1);
 			printf("ct2:0x%08x \n", readl(MFP_CTL2));
-		}else{
-			mmc->block_dev.lba = vir_mmc->phy_mmca->block_dev.lba;
-			mmc->block_dev.part_type= phymmc_sd->block_dev.part_type ;
-			printf("host%d scan ok\n", dev_index);
-			return 0;
 		}
-
-	}else if(dev_index == SLOT2){
-
-		mmc = mmc_vir_create(vircfg,&g_owl_vir_mmc[virmmc_id]);
-		if (!mmc) {
-			printf("err:mmc_vir_create\n");
-			return -1;
-		}
-		vir_mmc = (struct vir_mmc *)(mmc->priv);
-		phymmc_emmca = mmc_create(phycfga, &mmc_host[dev_index]);
-		if (!phymmc_emmca) {
-			printf("err:mmc_create phymmc_emmca\n");
-			return -1;
-		}
-		vir_mmc->phy_mmca = phymmc_emmca;
-		vir_mmc->phy_mmca->block_dev.dev = 1;
-
-		if(mmc_init(vir_mmc->phy_mmca)){
-			printf("phy_mmca init fail\n");
-		}else{
-			mmc->block_dev.part_type= phymmc_emmca->block_dev.part_type ;
-			printf("phy_mmca init ok\n");
-		}
-#ifdef DUAL_EMMC
-		vir_mmc->phy_mmca->card_trs_par.buf=malloc(PHYMMC_BUF_SIZE); // only init one time
-		if(!(vir_mmc->phy_mmca->card_trs_par.buf)){
-			printf("err:%s:malloc phy_mmca buf \n",__FUNCTION__);
-			return -1;
-		}
-
-		phymmc_emmcb = mmc_create(phycfgb, &mmc_host[dev_index+1]);
-		if (!phymmc_emmcb) {
-			printf("err:mmc_create phymmc_emmcb\n");
-			return -1;
-		}
-		vir_mmc->phy_mmcb = phymmc_emmcb;
-		vir_mmc->phy_mmcb->card_trs_par.buf=malloc(PHYMMC_BUF_SIZE); // only init one time
-		if(!(vir_mmc->phy_mmcb->card_trs_par.buf)){
-			printf("err:%s:malloc phy_mmca buf \n",__FUNCTION__);
-			return -1;
-		}
-		phymmc_emmcb->block_dev.dev = 1;
-		if(mmc_init(vir_mmc->phy_mmcb)){
-			printf("phy_mmcb init fail\n");
-			return -1;
-		}else{
-			vir_mmc->dual_mmc_en = 1;
-			printf("phy_mmcb init ok\n");
-		 }
-#endif
-		 mmc_set_vir_cap(mmc);
+	} else {
+		printf("host%d scan ok\n", dev_index);
 	}
-
-
 	return ret;
 }
+
+#ifdef CONFIG_OWL_EMMC_RAID0
+int owl_mmc_raid0_init(int dev_index_0, int dev_index_1)
+{
+    int lba;
+	struct mmc *mmc_raid0_0 = find_mmc_device(dev_index_0);
+	struct mmc *mmc_raid0_1 = find_mmc_device(dev_index_1);
+
+	if (!mmc_raid0_0 || !mmc_raid0_1) {
+		printf("err:mmc_raid0_0=%p, mmc_raid0_1=%p\n", mmc_raid0_0, mmc_raid0_1);
+		return -1;
+	}
+    if (mmc_raid0_0->block_dev.lba != mmc_raid0_1->block_dev.lba) {
+		printf("err:mmc_raid0_0_lba(%d) != mmc_raid0_1_lba(%d)\n"
+            , mmc_raid0_0->block_dev.lba, mmc_raid0_1->block_dev.lba);
+		return -1;
+	}
+    lba = mmc_raid0_0->block_dev.lba + mmc_raid0_1->block_dev.lba;
+    mmc_raid0_0->block_dev.lba = mmc_raid0_1->block_dev.lba = lba;
+    
+    mmc_raid0_0->raid0[0] = mmc_raid0_0;
+    mmc_raid0_0->raid0[1] = mmc_raid0_1;
+    mmc_raid0_1->raid0[0] = mmc_raid0_0;
+    mmc_raid0_1->raid0[1] = mmc_raid0_1;
+
+    return 0;
+}
+#endif
+
