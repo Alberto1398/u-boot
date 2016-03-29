@@ -16,14 +16,28 @@
 extern int read_mi_item(char *name, void *buf, unsigned int count);
 #if  defined(CONFIG_GENERIC_MMC) && !defined(CONFIG_SPL_BUILD)
 extern int owl_mmc_init(int dev_index);
+extern int owl_mmc_raid0_init(int dev_index_0, int dev_index_1);
 
 int board_mmc_init(bd_t *bis)
 {
+    int id = 0, dev0_id = -1, dev1_id = -1;
+
 #ifdef SLOT0
 	owl_mmc_init(SLOT0);
+    id++;
 #endif
 #ifdef SLOT2
 	owl_mmc_init(SLOT2);
+    dev0_id = id;
+    id++;
+#endif
+#ifdef SLOT3
+	owl_mmc_init(SLOT3);
+    dev1_id = id;
+    id++;
+#endif
+#ifdef CONFIG_OWL_EMMC_RAID0
+	owl_mmc_raid0_init(dev0_id, dev1_id);
 #endif
 	return 0;
 }

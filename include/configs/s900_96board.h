@@ -12,7 +12,11 @@
 
 #define CONFIG_EXTRA_ENV_SETTINGS	CONFIG_EXTRA_ENV_SETTINGS_COMMON \
 					"devif=mmc\0"			 \
-					"bootdisk=1\0"
+					"bootdisk=1\0"			\
+					"create_gpt=setenv partitions \"name=BOOTLOADER,size=8MiB;"		\
+						"name=BOOT,size=50MiB;name=SYSTEM,size=6500MiB;"		\
+						"name=SWAP,size=768MiB;name=BOOT_MSG,size=-;\"; "		\
+						"gpt write mmc 1 ${partitions};\0"
 
 #define CONFIG_BOOTCOMMAND		"run emmcboot;"
 #define CONFIG_BOOTDELAY		1	/* autoboot after 1 seconds */
@@ -43,8 +47,11 @@
 #define CONFIG_MMC					1
 #define CONFIG_GENERIC_MMC		1
 #define CONFIG_OWL_MMC			1
+#undef CONFIG_OWL_EMMC_RAID0
+
 #define SLOT0                                          0
 #define SLOT2                                          2
+#undef SLOT3
 
 /* GPT command */
 #define CONFIG_PARTITION_UUIDS

@@ -265,19 +265,6 @@
 #define MMC_NUM_BOOT_PARTITION	2
 #define MMC_PART_RPMB           3	/* RPMB partition number */
 
-#define READ 	0
-#define WRITE 	1
-#define DAID0_CHUCK_SIZE  	4096
-#define DAID0_CHUCK_SECORT  (DAID0_CHUCK_SIZE/512)
-typedef struct {
-	unsigned long start_sec;
-	unsigned long sec_offset;
-	unsigned long sec_num; //512
-	bool tras_flag;
-	unsigned int  table[512];
-	unsigned int vailnum;
-	char* buf;
-}TRANS_PAR,*pTRANS_PAR;
 struct mmc_cid {
 	unsigned long psn;
 	unsigned short oid;
@@ -317,7 +304,7 @@ struct mmc_ops {
 };
 
 struct mmc_config {
-	char *name;
+	const char *name;
 	const struct mmc_ops *ops;
 	uint host_caps;
 	uint voltages;
@@ -328,17 +315,11 @@ struct mmc_config {
 };
 
 /* TODO struct mmc should be in mmc_private but it's hard to fix right now */
-struct vir_mmc{
-	struct mmc *phy_mmca;
-	struct mmc *phy_mmcb;
-	unsigned char dual_mmc_en;
-};
 struct mmc {
 	struct list_head link;
 	const struct mmc_config *cfg;	/* provided configuration */
 	uint version;
 	void *priv;
-	void *vir;
 	uint has_init;
 	int high_capacity;
 	uint bus_width;
@@ -373,7 +354,9 @@ struct mmc {
 	char init_in_progress;	/* 1 if we have done mmc_start_init() */
 	char preinit;		/* start init as early as possible */
 	int ddr_mode;
-	TRANS_PAR card_trs_par;
+#ifdef CONFIG_OWL_EMMC_RAID0
+    struct mmc *raid0[2];
+#endif
 };
 
 struct mmc_hwpart_conf {
@@ -397,11 +380,6 @@ enum mmc_hwpart_conf_mode {
 	MMC_HWPART_CONF_COMPLETE,
 };
 
-struct mmc *mmc_vir_create(const struct mmc_config *cfg,
-								struct vir_mmc* vir_mmc);
-ulong vir_mmc_prepare_sector(struct mmc *mmc,lbaint_t start,
-							lbaint_t blkcnt);
-ulong mmc_bread(int dev_num, lbaint_t start, lbaint_t blkcnt, void *dst);
 int mmc_register(struct mmc *mmc);
 struct mmc *mmc_create(const struct mmc_config *cfg, void *priv);
 void mmc_destroy(struct mmc *mmc);
@@ -477,7 +455,7 @@ void board_mmc_power_init(void);
 int board_mmc_init(bd_t *bis);
 int cpu_mmc_init(bd_t *bis);
 int mmc_get_env_addr(struct mmc *mmc, int copy, u32 *env_addr);
-void mmc_set_vir_cap(struct mmc *mmc);
+
 struct pci_device_id;
 
 /**

@@ -9,8 +9,6 @@
 #error Unknown SoC type
 #endif
 
-#define FDI_EMMC_ID			0x14
-
 #define SLOT0  0
 #define SLOT2  2
 #define SLOT3  3
