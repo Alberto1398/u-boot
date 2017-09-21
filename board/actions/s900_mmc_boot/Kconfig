@@ -1,0 +1,38 @@
+if TARGET_S900_EVB_MMC_BOOT
+
+config SYS_BOARD
+	default "s900_mmc_boot"
+
+config SYS_VENDOR
+	default "actions"
+
+config SYS_CONFIG_NAME
+	default "s900_evb_mmc_boot"
+
+endif
+
+if TARGET_S900_EVB_216BALL_MMC_BOOT
+
+config SYS_BOARD
+	default "s900_mmc_boot"
+
+config SYS_VENDOR
+	default "actions"
+
+config SYS_CONFIG_NAME
+	default "s900_evb_216ball_mmc_boot"
+
+endif
+
+if TARGET_S900_96BOARD_MMC_BOOT
+
+config SYS_BOARD
+	default "s900_mmc_boot"
+
+config SYS_VENDOR
+	default "actions"
+
+config SYS_CONFIG_NAME
+	default "s900_96board_mmc_boot"
+
+endif

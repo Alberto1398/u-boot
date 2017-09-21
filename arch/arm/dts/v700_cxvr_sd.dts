@@ -1,0 +1,206 @@
+/*
+ * Copyright (c) 2015 Actions Semi Co., Ltd.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
+ */
+
+/dts-v1/;
+
+#include "s700.dtsi"
+
+/ {
+	model = "s700 upgrade";
+	compatible = "actions,s700_upgrade", "actions,s700";
+
+	chosen {
+		stdout-path = &serial3;
+	};
+
+	clock:e0168000 {
+		compatible = "actions,owl-clk";
+		core_pll = <600>;
+		dev_pll = <600>;
+		display_pll = <720>;
+		//ddr_pll_spread_spectrum =<1>;   /* 0 : disable ; else enable*/
+		//nand_pll_spread_spectrum =<1>;   /* 0 : disable ; else enable*/
+		//display_pll_spread_spectrum =<1>;   /* 0 : disable ; else enable*/
+		//dsi_pll_spread_spectrum =<1>;   /* 0 : disable ; else enable*/
+	};
+
+	pwm: pwm@e01b0000 {
+		pwm0 {
+			id = <0>;
+			mfp = <0>;
+		};
+
+		pwm1 {
+			id = <1>;
+			mfp = <0>;
+		};
+
+		pwm2 {
+			id = <2>;
+			mfp = <0>;
+		};
+	};
+
+	xhci@e0400000 {
+		actions,vbus-gpio = <&gpiod 21 0>;  /* GPIOD21,  1: low active; 0: high active */
+	};
+
+	adfu {
+		compatible = "actions,usb-adfu";
+		detect_times = <100>;
+		detect_interval = <5>;	/* total time =  detect_times * detect_interval(ms) */
+		vbus_type = <1>;	/* 1: IC detect, 2: PMU detect */
+	};
+
+	i2c0: i2c@e0170000 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		atc2603c_pmic {
+			compatible = "actions,atc2603c";
+			reg = <0x65 1>;
+
+
+			total_steps = <64>;
+			pwms_gpu = <&pwm 2 2666 0>;
+			vdd_gpu = <20>;  // 1.15V
+			vdd_core = <55>; //1.10
+			pwms_core = <&pwm 1 2666 0>;
+			atc2603c_pstore {
+				compatible = "actions,atc2603c-pstore";
+			};
+
+			voltage-regulators {
+				dcdc1: dcdc1 {
+					regulator-name = "dcdc1";
+					regulator-min-microvolt = <1150000>;
+					regulator-max-microvolt = <1150000>;
+					regulator-always-on;
+				};
+
+				dcdc3: dcdc3 {
+					regulator-name = "dcdc3";
+					regulator-min-microvolt = <3100000>;
+					regulator-max-microvolt = <3100000>;
+					regulator-always-on;
+				};
+
+				ldo1: ldo1{
+					regulator-name = "ldo1";
+					regulator-min-microvolt  = <2700000>;
+					regulator-max-microvolt = <2700000>;
+					regulator-always-on;
+				};
+
+
+			ldo7: ldo7{
+				regulator-name = "ldo7";
+				regulator-min-microvolt  = <1800000>;
+				regulator-max-microvolt = <1800000>;
+			};
+		};
+
+		atc2603c-battery{
+			compatible = "actions,atc2603c-battery";
+			capacity = <4000>;/*unit:mAh*/
+			shutdown_current = <50>;/*unit:ua*/
+		};
+		atc2603c-charger{
+			compatible = "actions,atc2603c-charger";
+			rsense = <20>;/*unit:mohm*/
+			support_adaptor_type = <2>; /*1: DCIN  2: USB  3:DCIN+USB*/
+			usb_pc_ctl_mode = <1>; /*0:disable vbus ctl;1:current limited;2:voltage limited*/
+			wall_switch = <&gpioa 25 0>;/*GPIOA25,0: high, 1: low*/
+		};
+
+		};
+	};
+
+	backlight {
+		compatible = "actions,s700-pwm-backlight";
+
+		/* GPIOB18, active high */
+		en-gpios = <&gpiob 18 0>;
+
+		/*1.pwm num; 2. period in ns; */
+		/*3.plarity, 0: high active, 1: low active*/
+		pwms = <&pwm 0 50000 1>;
+
+		total_steps = <1024>;
+		min_brightness = <100>;
+		max_brightness = <1000>;
+		dft_brightness = <500>;
+
+		delay_bf_pwm = <0>; /*in ms*/
+		delay_af_pwm = <20>; /*in ms*/
+	};
+
+	dsi@e0310000 {
+		panel_configs = <&config0>;
+
+		/* 1080x1920p60 */
+		config0: mipi_configs {
+			lcd_mode = <1>;		/* 0: command mode 1: video mode */
+			lane_count = <4>;	/* 1: 1,2:1~2, 3:1~3, 4:1~4
+			lane_polarity = <0>;	/* 0: normal,1: reversed*/
+			lane_swap = <0x3210>;	/* sequence of data lines */
+
+			burst_bllp = <60>;	/* 0 ~ 333, just burst mode needed
+						 * It will affect the frame rate */
+
+			video_mode = <0>;	/* 0: sync mode, 1:de mode, 2: burst mode */
+			pclk_rate = <137>;	/* 137MHz, HSCLK, divider X */
+		};
+
+		/* sharp lq055t3sx02 */
+		panel@lq055t3sx02 {
+			compatible = "actions,panel-lq055t3sx02";
+
+			/* panel's fixed info */
+			width_mm = <68>;
+			height_mm = <121>;
+			bpp = <24>;
+
+			is_primary = <1>;
+
+			/* operation delay in ms */
+			power_on_delay = <10>;
+			power_off_delay = <0>;
+			enable_delay = <10>;
+			disable_delay = <0>;
+
+			power1-gpio = <&gpiob 4 1>;	/* low active, control panel VSP */
+			reset-gpio = <&gpiob 19 1>;	/* low active, control panel reset */
+			/* screen init command info */
+			mipi_cmd = <0x00FF1500 0x01FB1500 0x00FF1500 0x08D31500 0x0ED41500>;
+
+			videomode-0 = <&mode0>;
+			/* 1080x1920p60 */
+			mode0: videomode {
+				refresh_rate = <60>;
+				xres = <1080>;
+				yres = <1920>;
+
+				/* in pico second, 0.000 000 000 001s */
+				pixel_clock = <7299>;
+
+				hsw = <8>;
+				hbp = <16>;
+				/*if the burst mode transmission, hfp need to includ burst_bllp*/
+				hfp = <102>;
+
+				vsw = <2>;
+				vbp = <6>;
+				/* vfp can be as small as possible,
+				 * it related to preline time */
+				vfp = <14>;
+
+				/* 0: FB_VMODE_NONINTERLACED, 1:FB_VMODE_INTERLACED */
+				vmode = <0>;
+			};
+		};
+	};
+
+};

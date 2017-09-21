@@ -1,0 +1,89 @@
+/*
+ * Copyright (c) 2015 Actions Semi Co., Ltd.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
+ */
+
+/dts-v1/;
+
+#include "s700.dtsi"
+
+/ {
+	model = "s700 upgrade";
+	compatible = "actions,s700_upgrade", "actions,s700";
+
+	chosen {
+		stdout-path = &serial5;
+	};
+
+	clock:e0168000 {
+		compatible = "actions,owl-clk";
+		core_pll = <600>;
+		dev_pll = <300>;
+		display_pll = <480>;
+	};
+
+
+	i2c0: i2c@e0170000 {
+			#address-cells = <1>;
+			#size-cells = <1>;
+		atc2603c_pmic {
+			compatible = "actions,atc2603c";
+			reg = <0x65 1>;
+			pwm_config_0_pwm_val = <0>;
+			pwm_config_0_shift = <0>;
+			pwm_config_0_mask = <0>;
+			pwm_config_0_val = <0>;
+			pwm_config_0_no = <0>;
+			pwm_config_1_pwm_val = <0x102c3f>;
+			pwm_config_1_shift = <0x26>;
+			pwm_config_1_mask = <0x7>;
+			pwm_config_1_val = <0x3>;
+			pwm_config_1_no = <0x1>;
+			pwm_config_2_pwm_val = <0x10343f>;
+			pwm_config_2_shift = <0x26>;
+			pwm_config_2_mask = <0x7>;
+			pwm_config_2_val = <0x3>;
+			pwm_config_2_no = <0x1>;
+
+			atc2603c_pstore {
+					compatible = "actions,atc2603c-pstore";
+			};
+			voltage-regulators {
+
+			dcdc1: dcdc1 {
+				regulator-name = "dcdc1";
+				regulator-min-microvolt = <1150000>;
+				regulator-max-microvolt = <1150000>;
+				regulator-always-on;
+			};
+
+			dcdc3: dcdc3 {
+				regulator-name = "dcdc3";
+				regulator-min-microvolt = <3100000>;
+				regulator-max-microvolt = <3100000>;
+				regulator-always-on;
+			};
+
+			ldo1: ldo1{
+				regulator-name = "ldo1";
+				regulator-min-microvolt  = <2700000>;
+				regulator-max-microvolt = <2700000>;
+				regulator-always-on;
+			};
+
+
+			ldo7: ldo7{
+				regulator-name = "ldo7";
+				regulator-min-microvolt  = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+
+
+		};
+
+
+		};
+	};
+};

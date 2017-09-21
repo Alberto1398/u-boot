@@ -1,0 +1,15 @@
+config DM_RTC
+	bool "Enable Driver Model for RTC drivers"
+	depends on DM
+	help
+	  Enable drver model for real-time-clock drivers. The RTC uclass
+	  then provides the rtc_get()/rtc_set() interface, delegating to
+	  drivers to perform the actual functions. See rtc.h for a
+	  description of the API.
+
+config DM_PMIC_ATC260X_MFD_RTC
+	bool "ATX260X multiple function device"
+	depends on DM_PMIC
+	default y
+	help
+	  ATX260X multiple function device misc rtc.

@@ -1,0 +1,12 @@
+if TARGET_S900VR_YS_2K
+
+config SYS_BOARD
+	default "s900vr_ys_2k"
+
+config SYS_VENDOR
+	default "actions"
+
+config SYS_CONFIG_NAME
+	default "s900vr_ys_2k"
+
+endif

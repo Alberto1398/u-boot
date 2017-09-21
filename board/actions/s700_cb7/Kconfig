@@ -1,0 +1,12 @@
+if TARGET_S700_CB7
+
+config SYS_BOARD
+	default "s700_cb7"
+
+config SYS_VENDOR
+	default "actions"
+
+config SYS_CONFIG_NAME
+	default "s700_cb7"
+
+endif

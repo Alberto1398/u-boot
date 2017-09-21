@@ -1,0 +1,12 @@
+if TARGET_S900_TPE
+
+config SYS_BOARD
+	default "s900_tpe"
+
+config SYS_VENDOR
+	default "actions"
+
+config SYS_CONFIG_NAME
+	default "s900_tpe"
+
+endif

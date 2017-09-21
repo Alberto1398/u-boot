@@ -1,0 +1,323 @@
+/*
+ * Copyright (c) 2015 Actions Semi Co., Ltd.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
+ */
+
+/dts-v1/;
+
+#include "s900.dtsi"
+
+/ {
+	model = "s900 YS 2K";
+	compatible = "actions,s900vr_ys_2k", "actions,s900";
+
+	chosen {
+		stdout-path = &serial5;
+	};
+
+	clock:e0160000 {
+		compatible = "actions,owl-clk";
+		core_pll = <1104>;
+		dev_pll = <660>;
+		display_pll = <1056>;
+		//ddr_pll_spread_spectrum =<1>; /* 0 : disable ; else enable*/
+		//nand_pll_spread_spectrum =<1>;  /* 0 : disable ; else enable*/
+		//dp_pll_spread_spectrum =<1>; /* 0 : disable ; else enable*/
+	};
+
+	pwm: pwm@e01b0000 {
+		pwm2 {
+			id = <2>;
+			mfp = <0>;
+		};
+	};
+
+	de@e02e0000 {
+		gamma_adjust_needed = <0>;
+	};
+
+	edp@e02e0000 {
+		panel_configs = <&config0>;
+
+		/*
+		 * edp_configs, used to configure edp controller,
+		 * its values should set according to edp panel's spec.
+		 * Currently, the configration is for lg-lp097qx1 panel.
+		 */
+		config0: edp_configs {
+			link_rate = <1>;	/* 0, 1.62G; 1, 2.7G; 2, 5.4G */
+
+			lane_count = <4>;
+			lane_polarity = <0x00>;	/* bit 0~3 map for data lanes' polarity,
+						   bit 4 map for aux lanes' polarity,
+						   0 normal, 1 reversed */
+			lane_mirror = <0>;	/* lane mirror, 0 lane0~3, 1 lane3~0 */
+
+			mstream_polarity = <0x3>;/* bit map for mstream's polarity,
+						   bit1: vsync, bit0 hsync */
+			user_sync_polarity = <0xc>;/* bit map for user sync's polarity,
+						    * bit3: sync signal polarity,
+						    * bit2: enable signal polarity,
+						    * bit1: vsync polarity,
+						    * bit0: hsync polarity
+						    */
+
+			pclk_parent = <1>;	/* 0, ASSIST_PLL, 1, DISPLAY PLL */
+			pclk_rate = <264000000>;/* 250MHz, ASSIST_PLL, divider 2 */
+		};
+
+		/* sharp-tc358860 edp2dsi panel */
+		panel_tc358860: edp_panel {
+			compatible = "actions,panel-tc358860";
+
+			/* panel's fixed info */
+			width_mm = <68>;
+			height_mm = <121>;
+			bpp = <24>;
+
+			is_primary = <1>;
+			hotplugable = <0>;
+			hotplug_always_on = <0>;
+
+			/* operation delay in ms */
+			power_on_delay = <10>;
+			power_off_delay = <0>;
+			enable_delay = <10>;
+			disable_delay = <0>;
+
+			/*
+			 * property val of the display effects of panel,
+			 * range is 0 ~ 100
+			 */
+			gamma_r_val = <100>;
+			gamma_g_val = <100>;
+			gamma_b_val = <90>;
+
+			power-gpio = <&gpioa 9 1>; /* tc358860 power, active low */
+			power1-gpio = <&gpioa 8 0>; /* panel vddio, active high */
+			power2-gpio = <&gpioa 11 0>; /* panel vsp, active high*/
+
+			reset-gpio = <&gpioa 6 1>; /* tc358860 reset, active low */
+			reset1-gpio = <&gpioa 20 1>; /* panel reset, active low */
+
+			videomode-0 = <&mode0>;
+			/* 1440x2560p60 */
+			mode0: videomode {
+				refresh_rate = <60>;
+
+				xres = <1440>;
+				yres = <2560>;
+
+				/*
+				 * pclk_rate = 200MHz, ASSIS_PLL, divider 2.5
+				 * pixel_clock = picoseconds / pclk_rate
+				 */
+				pixel_clock = <5000>;
+
+				hsw = <40>;
+				hbp = <170>;
+				hfp = <80>;
+
+				vsw = <2>;
+				vbp = <6>;
+				vfp = <8>;
+
+				/* 0: FB_VMODE_NONINTERLACED, 1:FB_VMODE_INTERLACED */
+				vmode = <0>;
+			};
+		};
+	};
+
+	i2c4: i2c@e0178000 {
+		edp_i2c {
+			compatible = "actions,edp-i2c-init";
+			reg = <0x0e>;
+			u-boot,i2c-offset-len = <2>;
+		};
+	};
+
+	i2c3: i2c@e0176000 {
+		atc2609a_pmic {
+			compatible = "actions,atc2609a";
+			reg = <0x65>;
+
+			atc2609a_rtc {
+					compatible = "actions,atc2609a-rtc";
+			};
+
+			atc2609a_pstore {
+					compatible = "actions,atc2609a-pstore";
+			};
+
+			atc2609a_misc {
+					compatible = "actions,atc2609a-misc";
+			};
+
+			atc2609a_auxadc {
+					compatible = "actions,atc2609a-auxadc";
+			};
+
+			voltage-regulators {
+
+			/* DCDC0       VDD_CORE
+			 * DCDC1       VDD_CPU
+			 * DCDC2       VDDR
+			 * DCDC3       VCC
+			 * DCDC4       VDD_CPUM
+			 */
+			dcdc0: dcdc0 {
+				regulator-name = "dcdc0";
+				regulator-min-microvolt = <925000>;
+				regulator-max-microvolt = <925000>;
+				regulator-always-on;
+			};
+
+			dcdc1: dcdc1 {
+				regulator-name = "dcdc1";
+				regulator-min-microvolt = <925000>;
+				regulator-max-microvolt = <925000>;
+				regulator-always-on;
+			};
+
+			dcdc3: dcdc3 {
+				regulator-name = "dcdc3";
+				regulator-min-microvolt = <3100000>;
+				regulator-max-microvolt = <3100000>;
+				regulator-always-on;
+			};
+
+			dcdc4: dcdc4 {
+				regulator-name = "dcdc4";
+				regulator-min-microvolt = <925000>;
+				regulator-max-microvolt = <925000>;
+				regulator-always-on;
+			};
+
+			/* LDO0        SD_VCC
+			 * LDO1        WIFI_3V3
+			 * LDO2        AVCC
+			 * LDO3        ATC2609_VDD
+			 * LDO4        AVCC_1V8
+			 * LDO6        AVDD_1V0
+			 * LDO7        VCC_1V8_IO
+			 * LDO8        UNUSED
+			 * LDO9        RTC_VDD     */
+
+			ldo0: ldo0{
+				regulator-name = "ldo0";
+				regulator-min-microvolt  = <3100000>;
+				regulator-max-microvolt = <3100000>;
+				regulator-always-on;
+			};
+
+			ldo1: ldo1{
+				regulator-name = "ldo1";
+				regulator-min-microvolt  = <3300000>;
+				regulator-max-microvolt = <3300000>;
+			};
+
+			ldo2: ldo2{
+				regulator-name = "ldo2";
+				regulator-min-microvolt  = <3100000>;
+				regulator-max-microvolt = <3100000>;
+				regulator-always-on;
+			};
+
+			ldo3: ldo3{
+				regulator-name = "ldo3";
+				regulator-min-microvolt  = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+
+			ldo4: ldo4{
+				regulator-name = "ldo4";
+				regulator-min-microvolt  = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+
+
+			ldo6: ldo6{
+				regulator-name = "ldo6";
+				regulator-min-microvolt  = <1100000>;
+				regulator-max-microvolt = <1100000>;
+				regulator-always-on;
+			};
+
+			ldo7: ldo7{
+				regulator-name = "ldo7";
+				regulator-min-microvolt  = <1800000>;
+				regulator-max-microvolt = <1800000>;
+			};
+
+			ldo8: ldo8{
+				regulator-name = "ldo8";
+				regulator-min-microvolt  = <3100000>;
+				regulator-max-microvolt = <3100000>;
+			};
+
+			ldo9: ldo9{
+				regulator-name = "ldo9";
+				regulator-min-microvolt  = <2600000>;
+				regulator-max-microvolt = <3300000>;
+			};
+			};
+		};
+		atc2609a_adckeypad {
+			#define KEY_VOLUMEDOWN	114
+			#define KEY_VOLUMEUP	115
+			#define KEY_BACK		158
+			compatible = "actions,atc2609a-adckeypad";
+			keymapsize = <3>;
+			adc_channel_name = "REMCON";
+			key_val = <KEY_VOLUMEUP KEY_VOLUMEDOWN KEY_BACK>;
+			left_adc_val =  <0 1250 750>;
+			right_adc_val = <100 1450 850>;
+		};
+
+		atc2609a-battery{
+			compatible = "actions,atc2609a-battery";
+			capacity = <2800>;/*unit:mAh*/
+			shutdown_current = <50>;/*unit:ua*/
+		};
+		atc260x-charger{
+			compatible = "actions,atc2609a-charger";
+			rsense = <20>;/*unit:mohm*/
+			support_adaptor_type = <2>; /*1: DCIN  2: USB  3:DCIN+USB*/
+			usb_pc_ctl_mode = <1>; /*0:disable vbus ctl;1:current limited;2:voltage limited*/
+			wall_switch = <&gpioa 4 0>;/*GPIOA4,0: high, 1: low*/
+		};
+	};
+
+	backlight {
+		compatible = "actions,s900-pwm-backlight";
+
+		/* GPIOA14, active high */
+		en-gpios = <&gpioa 14 0>;
+
+		/*1.pwm num; 2. period in ns; */
+		/*3.plarity, 0: high active, 1: low active*/
+		pwms = <&pwm 2 50000 0>;
+
+		total_steps = <1024>;
+		min_brightness = <100>;
+		max_brightness = <1000>;
+		dft_brightness = <500>;
+
+		delay_bf_pwm = <0>; /*in ms*/
+		delay_af_pwm = <5>; /*in ms*/
+	};
+
+	xhci@e0400000 {
+		actions,vbus-gpio = <&gpiod 1 0>;  /* GPIOD1,  0:  high active ; 1: low active */
+	};
+
+	adfu {
+		compatible = "actions,usb-adfu";
+		detect_times = <100>;
+		detect_interval = <5>;	/* total time =  detect_times * detect_interval(ms) */
+		vbus_type = <2>;	/* 1: IC detect, 2: PMU detect */
+	};
+};

@@ -1,0 +1,25 @@
+if ARCH_OWL
+
+choice
+	prompt "Actions OWL SoC select"
+	optional
+
+config S900
+	bool "S900 family"
+	select ARM64
+
+config S700
+	bool "S700 family"
+	select ARM64
+endchoice
+
+config SYS_SOC
+	default "owl"
+
+config SYS_MALLOC_F_LEN
+	default 0x800
+
+source "arch/arm/mach-owl/s900/Kconfig"
+source "arch/arm/mach-owl/s700/Kconfig"
+
+endif

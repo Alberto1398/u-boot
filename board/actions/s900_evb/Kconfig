@@ -1,0 +1,12 @@
+if TARGET_S900_EVB
+
+config SYS_BOARD
+	default "s900_evb"
+
+config SYS_VENDOR
+	default "actions"
+
+config SYS_CONFIG_NAME
+	default "s900_evb"
+
+endif

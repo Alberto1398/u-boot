@@ -1,0 +1,103 @@
+if S900
+
+choice
+	prompt "S900 board select"
+	optional
+
+config TARGET_S900_EVB
+	bool "Actions S900 evaluate board"
+
+config TARGET_S900_UPGRADE
+	bool "Actions S900 upgrade"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.
+	  
+config TARGET_S900_EVB_216BALL
+	bool "Actions S900 EVB 216BALL"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.
+
+
+config TARGET_S900_EVB2_EMMC
+	bool "Actions S900 EVB2 (EMMC)"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.
+config TARGET_GT9_EBOX
+	bool "Actions GT9 EBOX"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.
+	  
+config TARGET_S900_96BOARD
+	bool "Actions S900 96BOARD"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.
+	  
+config TARGET_S900_TPE
+	bool "Actions S900 TPE"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.
+
+config TARGET_S900_VR
+	bool "Actions S900 VR"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.
+	  
+config TARGET_S900_EVB_MMC_BOOT
+	bool "Actions S900 card burn"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.
+	
+config TARGET_S900_96BOARD_MMC_BOOT
+	bool "Actions S900 96BOARD card burn"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.
+	  
+
+config TARGET_S900_EVB_216BALL_MMC_BOOT
+	bool "Actions S900 EVB 216BALL card burn"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.
+
+config TARGET_S900_RY_VR
+	bool "Actions S900 RY VR"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.	 
+
+config TARGET_S900VR_V3S_CP
+	bool "Actions S900 V3S_CP"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.
+
+config TARGET_S900VR_YS_2K
+	bool "Actions S900 Yashi 2K"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.
+
+endchoice
+
+source "board/actions/s900_evb/Kconfig"
+source "board/actions/s900_upgrade/Kconfig"
+source "board/actions/s900_evb_216ball/Kconfig"
+source "board/actions/gt9_ebox/Kconfig"
+source "board/actions/s900_96board/Kconfig"
+source "board/actions/s900_tpe/Kconfig"
+source "board/actions/s900_vr/Kconfig"
+source "board/actions/s900_mmc_boot/Kconfig"
+source "board/actions/s900_RY_VR/Kconfig"
+source "board/actions/s900vr_v3s_cp/Kconfig"
+source "board/actions/s900vr_ys_2k/Kconfig"
+source "board/actions/s900_evb2/Kconfig"
+endif

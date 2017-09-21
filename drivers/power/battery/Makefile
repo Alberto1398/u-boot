@@ -1,0 +1,14 @@
+#
+# Copyright (C) 2012 Samsung Electronics
+# Lukasz Majewski <l.majewski@samsung.com>
+#
+# SPDX-License-Identifier:	GPL-2.0+
+#
+
+obj-$(CONFIG_POWER_BATTERY_TRATS) += bat_trats.o
+obj-$(CONFIG_POWER_BATTERY_TRATS2) += bat_trats2.o
+obj-$(CONFIG_POWER_BATTERY_ATC2603C) += atc2603c_battery.o
+obj-$(CONFIG_POWER_BATTERY_ATC2609A) += atc2609a_battery.o
+obj-$(CONFIG_POWER_BATTERY_ATC260X) += atc260x_battery.o
+obj-$(CONFIG_POWER_BATTERY_BQ27441) += bq27441_battery.o
+obj-$(CONFIG_POWER_BATTERY) += power_battery.o

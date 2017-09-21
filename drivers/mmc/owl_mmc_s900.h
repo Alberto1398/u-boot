@@ -1,0 +1,38 @@
+#ifndef _OWL_MMC_S900_H_
+#define _OWL_MMC_S900_H_
+
+#define CMU_BASE				0xE0160000
+#define CMU_DEVPLL				(CMU_BASE + 0x0004)
+#define CMU_NANDPLL			(CMU_BASE + 0x000C)
+#define CMU_SD0CLK				(CMU_BASE + 0x0050)
+#define CMU_SD1CLK				(CMU_BASE + 0x0054)
+#define CMU_SD2CLK				(CMU_BASE + 0x0058)
+#define CMU_SD3CLK				(CMU_BASE + 0x00C4)
+#define CMU_DEVCLKEN0			(CMU_BASE + 0x00A0)
+#define CMU_DEVCLKEN1			(CMU_BASE + 0x00A4)
+#define CMU_DEVRST0			(CMU_BASE + 0x00A8)
+
+/* GPIO_MFP_PWM */
+#define GPIO_MFP_PWM_BASE		0xE01B0000
+#define MFP_CTL0				(GPIO_MFP_PWM_BASE + 0x0040)
+#define MFP_CTL1				(GPIO_MFP_PWM_BASE + 0x0044)
+#define MFP_CTL2				(GPIO_MFP_PWM_BASE + 0x0048)
+#define MFP_CTL3				(GPIO_MFP_PWM_BASE + 0x004C)
+#define PAD_PULLCTL0			(GPIO_MFP_PWM_BASE + 0x0060)
+#define PAD_PULLCTL1			(GPIO_MFP_PWM_BASE + 0x0064)
+#define PAD_PULLCTL2			(GPIO_MFP_PWM_BASE + 0x0068)
+#define PAD_DRV0				(GPIO_MFP_PWM_BASE + 0x0080)
+#define PAD_DRV1				(GPIO_MFP_PWM_BASE + 0x0084)
+#define PAD_DRV2				(GPIO_MFP_PWM_BASE + 0x0088)
+ /*SD*/
+#define OWL_SDC0_BASE			0xe0330000
+#define OWL_SDC1_BASE			0xe0334000
+#define OWL_SDC2_BASE			0xe0338000
+#define OWL_SDC3_BASE			0xe033c000
+     /*NAND*/
+#define NAND_ALG0_CTR_IO 		0xe03000a8
+#define NAND_ALG1_CTR_IO 		0xe03080a8
+#define EN_V18_R				(1<<25)
+#define EN_V18_W				(1<<24)
+
+#endif /* end of _OWL_MMC_H_ */

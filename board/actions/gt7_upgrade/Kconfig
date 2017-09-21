@@ -1,0 +1,12 @@
+if TARGET_GT7_UPGRADE
+
+config SYS_BOARD
+	default "gt7_upgrade"
+
+config SYS_VENDOR
+	default "actions"
+
+config SYS_CONFIG_NAME
+	default "gt7_upgrade"
+
+endif

@@ -1,0 +1,12 @@
+if TARGET_S900_EVB_216BALL
+
+config SYS_BOARD
+	default "s900_evb_216ball"
+
+config SYS_VENDOR
+	default "actions"
+
+config SYS_CONFIG_NAME
+	default "s900_evb_216ball"
+
+endif

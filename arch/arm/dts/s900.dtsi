@@ -1,0 +1,143 @@
+/*
+ * Copyright (c) 2015 Actions Semi Co., Ltd.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
+ */
+
+/ {
+	compatible = "actions,s900";
+	#address-cells = <2>;
+	#size-cells = <2>;
+
+	aliases {
+		serial0 = &serial0;	
+		serial5 = &serial5;
+		i2c0 = &i2c0;
+		i2c2 = &i2c2;
+		i2c3 = &i2c3;
+		i2c4 = &i2c4;
+		i2c5 = &i2c5;
+		gpio0 = &gpioa;
+		gpio1 = &gpiob;
+		gpio2 = &gpioc;
+		gpio3 = &gpiod;
+		gpio4 = &gpioe;
+		gpio5 = &gpiof;
+	};
+
+	gpioa: gpio@e01b0000 {
+		compatible = "actions,s900-gpio";
+		reg = <0 0xe01b0000 0 0xc>;
+		#gpio-cells = <2>;
+	};
+	gpiob: gpio@e01b000c {
+		compatible = "actions,s900-gpio";
+		reg = <0 0xe01b000c 0 0xc>;
+		#gpio-cells = <2>;
+	};
+	gpioc: gpio@e01b0018 {
+		compatible = "actions,s900-gpio";
+		reg = <0 0xe01b0018 0 0xc>;
+		#gpio-cells = <2>;
+	};
+	gpiod: gpio@e01b0024 {
+		compatible = "actions,s900-gpio";
+		reg = <0 0xe01b0024 0 0xc>;
+		#gpio-cells = <2>;
+	};
+	gpioe: gpio@e01b0030 {
+		compatible = "actions,s900-gpio";
+		reg = <0 0xe01b0030 0 0xc>;
+		#gpio-cells = <2>;
+	};
+	gpiof: gpio@e01b00f0 {
+		compatible = "actions,s900-gpio";
+		reg = <0 0xe01b00f0 0 0xc>;
+		#gpio-cells = <2>;
+	};
+
+
+	serial5: uart@e012a000 {
+		compatible = "actions,s900-serial";
+		reg = <0 0xe012a000 0 0x1000>;
+	};
+
+
+	serial0: uart@e0120000 {
+		compatible = "actions,s900-serial";
+		reg = <0 0xe0120000 0 0x1000>;
+	};
+
+	i2c0: i2c@e0170000 {
+		compatible = "actions,s900-i2c";
+		reg = <0 0xe0170000 0 0x2000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+	
+	i2c1: i2c@e0172000 {
+		compatible = "actions,s900-i2c";
+		reg = <0 0xe0172000 0 0x2000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	i2c2: i2c@e0174000 {
+		compatible = "actions,s900-i2c";
+		reg = <0 0xe0174000 0 0x2000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+	
+	i2c3: i2c@e0176000 {
+		compatible = "actions,s900-i2c";
+		reg = <0 0xe0176000 0 0x2000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	i2c4: i2c@e0178000 {
+		compatible = "actions,s900-i2c";
+		reg = <0 0xe0178000 0 0x2000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	i2c5: i2c@e017a000 {
+		compatible = "actions,s900-i2c";
+		reg = <0 0xe017a000 0 0x200>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	pwm@e01b0000 {
+		compatible = "actions,s900-pwm";
+		reg = <0 0xe01b0000 0 0x1000>;
+		#pwm-cells = <3>;
+	};
+
+	de@e02e0000 {
+		compatible = "actions,s900-de";
+		reg = <0 0xe02e0000 0 0x1014>;
+	};
+
+	edp@e02e0000 {
+		compatible = "actions,s900-edp";
+		reg = <0 0xe0190000 0 0x510>;
+	};
+
+	hdmi@e0250000 {
+		compatible = "actions,s900-hdmi";
+		reg = <0 0xe0250000 0 0x1f0>;
+	};
+	dsi@e01e0000 {
+		compatible = "actions,s900-dsi";
+		reg = <0 0xe01e0000 0 0x88>;
+	};
+
+
+	xhci@e0400000 {
+		compatible = "actions,s900-xhci";
+		reg = <0 0xe0400000 0 0xcd00>;
+	};
+};

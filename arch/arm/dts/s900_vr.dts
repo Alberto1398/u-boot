@@ -1,0 +1,203 @@
+/*
+ * Copyright (c) 2015 Actions Semi Co., Ltd.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
+ */
+
+/dts-v1/;
+
+#include "s900.dtsi"
+
+/ {
+	model = "s900 vr";
+	compatible = "actions,s900_vr", "actions,s900";
+
+	chosen {
+		stdout-path = &serial5;
+	};
+
+	clock:e0160000 {
+		compatible = "actions,owl-clk";
+		core_pll = <1104>;
+		dev_pll = <660>;
+		display_pll = <1056>;
+	};
+
+	i2c0: i2c@e0170000 {
+		hdmi_edid {
+			compatible = "actions,hdmi-edid";
+		};
+	};
+
+	i2c3: i2c@e0176000 {
+		atc2609a_pmic {
+			compatible = "actions,atc2609a";
+			reg = <0x65>;
+
+			atc2609a_rtc {
+					compatible = "actions,atc2609a-rtc";
+			};
+
+			atc2609a_pstore {
+					compatible = "actions,atc2609a-pstore";
+			};
+
+			atc2609a_misc {
+					compatible = "actions,atc2609a-misc";
+			};
+
+			atc2609a_auxadc {
+					compatible = "actions,atc2609a-auxadc";
+			};
+
+			voltage-regulators {
+
+			/* DCDC0       VDD_CORE
+			 * DCDC1       VDD_CPU
+			 * DCDC2       VDDR
+			 * DCDC3       VCC
+			 * DCDC4       VDD_CPUM
+			 */
+			dcdc0: dcdc0 {
+				regulator-name = "dcdc0";
+				regulator-min-microvolt = <925000>;
+				regulator-max-microvolt = <925000>;
+				regulator-always-on;
+			};
+
+			dcdc1: dcdc1 {
+				regulator-name = "dcdc1";
+				regulator-min-microvolt = <925000>;
+				regulator-max-microvolt = <925000>;
+				regulator-always-on;
+			};
+
+			dcdc3: dcdc3 {
+				regulator-name = "dcdc3";
+				regulator-min-microvolt = <3100000>;
+				regulator-max-microvolt = <3100000>;
+				regulator-always-on;
+			};
+
+			dcdc4: dcdc4 {
+				regulator-name = "dcdc4";
+				regulator-min-microvolt = <925000>;
+				regulator-max-microvolt = <925000>;
+				regulator-always-on;
+			};
+
+			/* LDO0        SD_VCC     
+			 * LDO1        SENS_AVDD  
+			 * LDO2        AVCC       
+			 * LDO3        ATC2609_VDD   
+			 * LDO4        AVCC_1V8   
+			 * LDO6        AVDD_1V0   
+			 * LDO7        SENS_DVDD  
+			 * LDO8        TP_VCC     
+			 * LDO9        RTC_VDD     */
+
+			ldo0: ldo0{
+				regulator-name = "ldo0";
+				regulator-min-microvolt  = <3100000>;
+				regulator-max-microvolt = <3100000>;
+				regulator-always-on;
+			};
+
+			ldo1: ldo1{
+				regulator-name = "ldo1";
+				regulator-min-microvolt  = <2300000>;
+				regulator-max-microvolt = <3400000>;
+			};
+
+			ldo2: ldo2{
+				regulator-name = "ldo2";
+				regulator-min-microvolt  = <3100000>;
+				regulator-max-microvolt = <3100000>;
+				regulator-always-on;
+			};
+
+			ldo3: ldo3{
+				regulator-name = "ldo3";
+				regulator-min-microvolt  = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+
+			ldo4: ldo4{
+				regulator-name = "ldo4";
+				regulator-min-microvolt  = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+
+
+			ldo6: ldo6{
+				regulator-name = "ldo6";
+				regulator-min-microvolt  = <1100000>;
+				regulator-max-microvolt = <1100000>;
+				regulator-always-on;
+			};
+
+			ldo7: ldo7{
+				regulator-name = "ldo7";
+				regulator-min-microvolt  = <700000>;
+				regulator-max-microvolt = <2200000>;
+			};
+
+			ldo8: ldo8{
+				regulator-name = "ldo8";
+				regulator-min-microvolt  = <2100000>;
+				regulator-max-microvolt = <3300000>;
+			};
+
+			ldo9: ldo9{
+				regulator-name = "ldo9";
+				regulator-min-microvolt  = <2600000>;
+				regulator-max-microvolt = <3300000>;
+			};
+			};
+		};
+
+		atc260x-charger{
+			compatible = "actions,atc2609a-charger";
+			rsense = <20>;/*unit:mohm*/
+			support_adaptor_type = <3>; /*1: DCIN  2: USB  3:DCIN+USB*/
+		};
+	};
+	
+	i2c5: i2c@e017a000 {
+		bq27441-battery {
+			compatible = "ti,bq27441-battery";
+			design_capacity = <3000>;
+		};
+	};
+
+	hdmi@e0250000 {
+		hdcp_onoff = <0>;
+		channel_invert = <0>;
+		bit_invert = <0>;
+
+		panel@ghp {
+			compatible = "actions,panel-ghp";
+
+			is_primary = <1>;
+
+			draw_width = <2560>;
+			draw_height = <1024>;
+
+			videomode-0 = <&default_mode>;
+
+			/* default mode used when EDID read error */
+			default_mode: videomode {
+				refresh_rate = <60>;
+
+				xres = <2560>;
+				yres = <1024>;
+			};
+		};
+	};
+
+	xhci@e0400000 {
+		actions,vbus-gpio = <&gpioa 5 0>;  /* GPIOA5,  0:  high active ; 1: low active */
+	};
+};

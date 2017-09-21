@@ -1,0 +1,12 @@
+if TARGET_V700_CXVR
+
+config SYS_BOARD
+	default "v700_cxvr"
+
+config SYS_VENDOR
+	default "actions"
+
+config SYS_CONFIG_NAME
+	default "v700_cxvr"
+
+endif

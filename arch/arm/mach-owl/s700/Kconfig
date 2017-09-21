@@ -1,0 +1,86 @@
+if S700
+
+choice
+	prompt "S700 board select"
+	optional
+
+	config TARGET_S700_GB7_WXGA
+	bool "Actions S700 gb7_wxga board: storage emmc"
+
+config TARGET_S700_ROSEAPPLEPI
+	bool "Actions S700 gb7_roseapplepi board: storage emmc"
+
+config TARGET_S700_EVB
+	bool "Actions S700 evb board: storage emmc/nand"
+
+config TARGET_S700_CB6
+	bool "Actions S700_cb6 board: storage emmc/nand"
+
+config TARGET_S700_CB7
+	bool "Actions S700_cb7 board: storage emmc/nand"
+
+config TARGET_S700_QCB
+	bool "Actions S700_QCB board: storage emmc/nand"
+
+config TARGET_GT7_EBOX
+	bool "Actions GT7 EBOX board: emmc/nand"
+
+config TARGET_GT7_EBOX_CTS
+	bool "Actions GT7 EBOX_CTS board: emmc/nand"
+
+config TARGET_GT7_EBOX_M8S_CTS
+	bool "Actions GT7 EBOX_M8S_CTS board: emmc/nand"
+
+config TARGET_GT7_EBOX_M8S
+	bool "Actions GT7 EBOX M8S board: emmc/nand"
+
+config TARGET_GT7_QCB
+	bool "Actions GT7 QCB board: emmc/nand"
+config TARGET_S700_UPGRADE
+	bool "Actions S700 upgrade"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.
+
+config TARGET_S700_ROSEAPPLEPI_UPGRADE
+	bool "Actions S700 roseapplepi upgrade"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.
+
+config TARGET_GT7_UPGRADE
+	bool "Actions GT7 upgrade"
+	help
+	  Directly jump kernel/initramfs that already download to ddr by
+	  production tool. Only used for burn firmware.
+
+config TARGET_V700_GB7_NIBIRU
+	bool "Actions V700 GB7 NIBIRU board: emmc/nand"
+
+config TARGET_V700_CXVR
+	bool "Actions V700 CXVR board: emmc/nand"
+
+config TARGET_V700_QCB
+	bool "Actions V700 QCB board: emmc/nand"
+
+endchoice
+
+source "board/actions/s700_gb7_wxga/Kconfig"
+source "board/actions/s700_roseapplepi/Kconfig"
+source "board/actions/s700_evb/Kconfig"
+source "board/actions/s700_upgrade/Kconfig"
+source "board/actions/s700_roseapplepi_upgrade/Kconfig"
+source "board/actions/s700_cb6/Kconfig"
+source "board/actions/s700_cb7/Kconfig"
+source "board/actions/s700_qcb/Kconfig"
+source "board/actions/gt7_ebox/Kconfig"
+source "board/actions/gt7_upgrade/Kconfig"
+source "board/actions/gt7_ebox_m8s/Kconfig"
+source "board/actions/gt7_qcb/Kconfig"
+source "board/actions/gt7_ebox_cts/Kconfig"
+source "board/actions/gt7_ebox_m8s_cts/Kconfig"
+source "board/actions/v700_gb7_nibiru/Kconfig"
+source "board/actions/v700_cxvr/Kconfig"
+source "board/actions/v700_qcb/Kconfig"
+
+endif

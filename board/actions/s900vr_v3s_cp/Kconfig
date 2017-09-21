@@ -1,0 +1,12 @@
+if TARGET_S900VR_V3S_CP
+
+config SYS_BOARD
+	default "s900vr_v3s_cp"
+
+config SYS_VENDOR
+	default "actions"
+
+config SYS_CONFIG_NAME
+	default "s900vr_v3s_cp"
+
+endif

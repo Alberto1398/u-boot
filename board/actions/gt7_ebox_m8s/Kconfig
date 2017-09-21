@@ -1,0 +1,12 @@
+if TARGET_GT7_EBOX_M8S
+
+config SYS_BOARD
+	default "gt7_ebox_m8s"
+
+config SYS_VENDOR
+	default "actions"
+
+config SYS_CONFIG_NAME
+	default "gt7_ebox_m8s"
+
+endif

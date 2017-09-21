@@ -1,0 +1,12 @@
+if TARGET_S700_ROSEAPPLEPI_UPGRADE
+
+config SYS_BOARD
+	default "s700_roseapplepi_upgrade"
+
+config SYS_VENDOR
+	default "actions"
+
+config SYS_CONFIG_NAME
+	default "s700_roseapplepi_upgrade"
+
+endif

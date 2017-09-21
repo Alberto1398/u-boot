@@ -1,0 +1,291 @@
+/*
+ * Copyright (c) 2015 Actions Semi Co., Ltd.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
+ */
+
+/dts-v1/;
+
+#include "s900.dtsi"
+
+/ {
+	model = "s900 RY VR";
+	compatible = "actions,s900_RY_VR", "actions,s900";
+
+	chosen {
+		stdout-path = &serial5;
+	};
+
+	clock:e0160000 {
+		compatible = "actions,owl-clk";
+		core_pll = <1104>;
+		dev_pll = <660>;
+		display_pll = <1056>;
+		//ddr_pll_spread_spectrum =<1>; /* 0 : disable ; else enable*/
+		//nand_pll_spread_spectrum =<1>;  /* 0 : disable ; else enable*/
+		//dp_pll_spread_spectrum =<1>; /* 0 : disable ; else enable*/
+	};
+
+
+	i2c3: i2c@e0176000 {
+		atc2609a_pmic {
+			compatible = "actions,atc2609a";
+			reg = <0x65>;
+
+			atc2609a_rtc {
+					compatible = "actions,atc2609a-rtc";
+			};
+
+			atc2609a_pstore {
+					compatible = "actions,atc2609a-pstore";
+			};
+
+			atc2609a_misc {
+					compatible = "actions,atc2609a-misc";
+			};
+
+			atc2609a_auxadc {
+					compatible = "actions,atc2609a-auxadc";
+			};
+
+			voltage-regulators {
+
+			/* DCDC0       VDD_CORE
+			 * DCDC1       VDD_CPU
+			 * DCDC2       VDDR
+			 * DCDC3       VCC
+			 * DCDC4       VDD_CPUM
+			 */
+			dcdc0: dcdc0 {
+				regulator-name = "dcdc0";
+				regulator-min-microvolt = <925000>;
+				regulator-max-microvolt = <925000>;
+				regulator-always-on;
+			};
+
+			dcdc1: dcdc1 {
+				regulator-name = "dcdc1";
+				regulator-min-microvolt = <925000>;
+				regulator-max-microvolt = <925000>;
+				regulator-always-on;
+			};
+
+			dcdc3: dcdc3 {
+				regulator-name = "dcdc3";
+				regulator-min-microvolt = <3100000>;
+				regulator-max-microvolt = <3100000>;
+				regulator-always-on;
+			};
+
+			dcdc4: dcdc4 {
+				regulator-name = "dcdc4";
+				regulator-min-microvolt = <925000>;
+				regulator-max-microvolt = <925000>;
+				regulator-always-on;
+			};
+
+			/* LDO0        SD_VCC     
+			 * LDO1        WIFI_3V3  
+			 * LDO2        AVCC       
+			 * LDO3        ATC2609_VDD   
+			 * LDO4        AVCC_1V8   
+			 * LDO6        AVDD_1V0   
+			 * LDO7        VCC_1V8_IO  
+			 * LDO8        UNUSED     
+			 * LDO9        RTC_VDD     */
+
+			ldo0: ldo0{
+				regulator-name = "ldo0";
+				regulator-min-microvolt  = <3100000>;
+				regulator-max-microvolt = <3100000>;
+				regulator-always-on;
+			};
+
+			ldo1: ldo1{
+				regulator-name = "ldo1";
+				regulator-min-microvolt  = <3300000>;
+				regulator-max-microvolt = <3300000>;
+			};
+
+			ldo2: ldo2{
+				regulator-name = "ldo2";
+				regulator-min-microvolt  = <3100000>;
+				regulator-max-microvolt = <3100000>;
+				regulator-always-on;
+			};
+
+			ldo3: ldo3{
+				regulator-name = "ldo3";
+				regulator-min-microvolt  = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+
+			ldo4: ldo4{
+				regulator-name = "ldo4";
+				regulator-min-microvolt  = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+
+	
+			ldo6: ldo6{
+				regulator-name = "ldo6";
+				regulator-min-microvolt  = <1100000>;
+				regulator-max-microvolt = <1100000>;
+				regulator-always-on;
+			};
+
+			ldo7: ldo7{
+				regulator-name = "ldo7";
+				regulator-min-microvolt  = <1800000>;
+				regulator-max-microvolt = <1800000>;
+			};
+
+			ldo8: ldo8{
+				regulator-name = "ldo8";
+				regulator-min-microvolt  = <2100000>;
+				regulator-max-microvolt = <3300000>;
+			};
+
+			ldo9: ldo9{
+				regulator-name = "ldo9";
+				regulator-min-microvolt  = <2600000>;
+				regulator-max-microvolt = <3300000>;
+			};
+			};
+		};
+		atc2609a_adckeypad {
+			#define KEY_VOLUMEDOWN	114
+			#define KEY_VOLUMEUP	115
+			#define KEY_BACK		158
+			compatible = "actions,atc2609a-adckeypad";
+			keymapsize = <3>;
+			adc_channel_name = "REMCON";
+			key_val = <KEY_VOLUMEUP KEY_VOLUMEDOWN KEY_BACK>;
+			left_adc_val =  <0 1250 750>;
+			right_adc_val = <100 1450 850>;
+		};
+
+		atc2609a-battery{
+			compatible = "actions,atc2609a-battery";
+			capacity = <2800>;/*unit:mAh*/
+			shutdown_current = <50>;/*unit:ua*/
+		};
+		atc260x-charger{
+			compatible = "actions,atc2609a-charger";
+			rsense = <20>;/*unit:mohm*/
+			support_adaptor_type = <2>; /*1: DCIN  2: USB  3:DCIN+USB*/
+			wall_switch = <&gpioa 4 0>;/*GPIOA4,0: high, 1: low*/
+		};
+	};
+
+	de@e02e0000 {
+		gamma_adjust_needed = <0>;
+	};
+	dsi@e01e0000 {
+		panel_configs = <&config0>;
+
+		/* 1080x1920p60 */
+		config0: mipi_configs {
+			lcd_mode = <1>;		/* 0: command mode 1: video mode */
+			lane_count = <4>;	/* 1: 1,2:1~2, 3:1~3, 4:1~4 */
+			lane_polarity = <0>;	/* 0: normal,1: reversed*/
+			lane_swap = <0x3210>;	/* sequence of data lines */
+			burst_bllp = <60>;	/* 0 ~ 333, just burst mode needed
+						 * It will affect the frame rate */
+			video_mode = <0>;	/* 0: sync mode, 1:de mode, 2: burst mode */
+			pclk_rate = <174>;	/* 174MHz, divider 3*/
+		};
+
+		/* E549MFK1.C */
+		panel@amoled {
+			compatible = "actions,panel-amoled";
+
+			/* panel's fixed info */
+			width_mm = <68>;
+			height_mm = <121>;
+			bpp = <24>;
+
+			is_primary = <1>;
+			hotplug_always_on = <0>;
+
+			/* operation delay in ms */
+			power_on_delay = <10>;
+			power_off_delay = <0>;
+			enable_delay = <10>;
+			disable_delay = <0>;
+			
+			/*
+			 * property val of the display effects of panel,
+			 * range is 0 ~ 100
+			 */
+			gamma_r_val = <100>;
+			gamma_g_val = <100>;
+			gamma_b_val = <90>;
+
+			power-gpio = <&gpioa 8 0>;
+			power1-gpio = <&gpioa 9 1>;
+			reset-gpio = <&gpioa 20 1>;
+			/* screen init command info */
+			mipi_cmd = <0x0EFE1500 0x004B1500 0x094C1500 0x204D1500 0x404E1500 0x604F1500
+				0xA0501500 0xC0511500 0xE0521500 0xFF531500 0x0DFE1500 0x01421500
+				0x08181500 0x41081500 0x02461500 0x09721500 0x16031500 0x29041500
+				0x0AFE1500 0x17241500 0x07041500 0x0C1A1500 0x340F1500 0x04FE1500
+				0x0C001500 0x06051500 0x06061500 0x780A1500 0x880B1500 0x111A1500
+				0x93291500 0x932A1500 0x022F1500 0x02311500 0x05331500 0x2D371500
+				0x2D381500 0x1E3A1500 0x1E3B1500 0x273D1500 0x803F1500 0x40401500
+				0xE0411500 0x2F4F1500 0x1E501500 0x2A681500 0x06FE1500 0x04051500
+				0xA2071500 0x020D1500 0xA20F1500 0x04371500 0x83391500 0x03411500
+				0x83431500 0x04491500 0xA24B1500 0x02511500 0xA2531500 0x027A1500
+				0x837C1500 0x01821500 0x83841500 0xEC851500 0x0F861500 0xFF871500
+				0x00881500 0x018A1500 0xA28C1500 0x06FE1500 0xCC001500 0x05051500
+				0x8C071500 0xCC081500 0x030D1500 0x8C0F1500 0xCC321500 0x05371500
+				0x83391500 0xCC3A1500 0x04411500 0x83431500 0xCC441500 0x05491500
+				0x8C4B1500 0xCC4C1500 0x03511500 0x8C531500 0xCC751500 0x037A1500
+				0x837C1500 0xCC7D1500 0x02821500 0x83841500 0xEC851500 0x0F861500
+				0xFF871500 0x00881500 0x028A1500 0x8C8C1500 0xAA8D1500 0x018E1500
+				0xE88F1500 0x0A901500 0x06921500 0x8A931500 0x92941500 0xEC951500
+				0x0F961500 0xFF971500 0x00981500 0x029A1500 0x8C9C1500 0x04AC1500
+				0x06FE1500 0x12B11500 0x17B21500 0x17B31500 0x17B41500 0x17B51500
+				0x11B61500 0x08B71500 0x09B81500 0x06B91500 0x07BA1500 0x17BB1500
+				0x17BC1500 0x17BD1500 0x17BE1500 0x17BF1500 0x17C01500 0x17C11500
+				0x17C21500 0x17C31500 0x0FC41500 0x0EC51500 0x00C61500 0x01C71500
+				0x10C81500 0x00FE1500 0x03C21500>;
+			videomode-0 = <&mode0>;
+			/* 1080x1920p60 */
+			mode0: videomode {
+				refresh_rate = <60>;
+				xres = <1080>;
+				yres = <1920>;
+
+				/* in pico second, 0.000 000 000 001s */
+				pixel_clock = <5780>;
+
+				hsw = <4>;
+				hbp = <140>;
+				/*if the burst mode transmission, hfp need to includ burst_bllp*/
+				hfp = <40>;
+
+				vsw = <4>;
+				vbp = <12>;
+				/* vfp can be as small as possible,
+				 * it related to preline time */
+				vfp = <20>;
+
+				/* 0: FB_VMODE_NONINTERLACED, 1:FB_VMODE_INTERLACED */
+				vmode = <0>;
+			};
+		};
+	};
+	xhci@e0400000 {
+		actions,vbus-gpio = <&gpiod 1 0>;  /* GPIOD1,  0:  high active ; 1: low active */
+	};
+
+	adfu {
+		compatible = "actions,usb-adfu";
+		detect_times = <100>;
+		detect_interval = <5>;	/* total time =  detect_times * detect_interval(ms) */
+		vbus_type = <2>;	/* 1: IC detect, 2: PMU detect */
+	};
+};
